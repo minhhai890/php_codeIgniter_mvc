@@ -6,7 +6,7 @@ define('SCHEME', (isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] == 'on' ? 'https
 // define('PATH_URL'			, BASE_NAME . $_SERVER['REQUEST_URI']);     	// http://example.com/abcdef.html
 
 // Local host
-define('HOST_NAME', $_SERVER['HTTP_HOST'] . '/bida');    		// /mvcobject
+define('HOST_NAME', $_SERVER['HTTP_HOST'] . '/CodeIgniter');    		// /mvcobject
 define('BASE_NAME', SCHEME . HOST_NAME);               		    // http://localhost/mvcobject/
 define('PATH_URL', SCHEME . $_SERVER['HTTP_HOST'] . $_SERVER['REQUEST_URI']); // http://localhost/mvcobject/abcdef.html
 
