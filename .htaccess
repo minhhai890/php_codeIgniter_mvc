@@ -1,0 +1,27 @@
+<IfModule mod_rewrite.c>
+    <IfModule mod_negotiation.c>
+        Options -MultiViews -Indexes
+    </IfModule>
+
+    RewriteEngine On
+
+    # Handle Authorization Header
+    RewriteCond %{HTTP:Authorization} .
+    RewriteRule .* - [E=HTTP_AUTHORIZATION:%{HTTP:Authorization}]
+
+
+    # Redirect Trailing Slashes If Not A Folder...
+    RewriteCond %{REQUEST_FILENAME} !-f
+    RewriteCond %{REQUEST_FILENAME} !-d
+    RewriteRule ^ index.php [L]
+
+    # Send Requests To Front Controller...
+    RewriteCond %{REQUEST_URI} !.(css|gif|ico|jpg|js|png|svg|ttf|woff|woff2|map)$
+  
+    # Gọi file độc lập
+    # RewriteCond %{REQUEST_URI} !(index.html)$
+    # RewriteCond %{REQUEST_URI} ^/admin/[^/]+/$
+  
+    RewriteCond %{REQUEST_FILENAME} !/index\.php$
+    RewriteRule ^ index.php [L]  
+</IfModule>
