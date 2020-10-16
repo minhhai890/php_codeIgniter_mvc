@@ -32,7 +32,7 @@ class Controller
 		$this->setParams($params);
 		$this->setJson();
 		$this->setValidate();
-		$this->setModel();
+		//$this->setModel();
 	}
 
 	// Phương thức thiết lập tham số
@@ -50,8 +50,8 @@ class Controller
 	{
 		if ($this->_params['controller']) {
 			$excute = $this->_params['excute'];
-			$className = '\\resources\\' . $excute['object'] . '\\' . $excute['src']['models'] . '\\' . ($name ? $name : $this->_params['controller']) . 'Model';
-			$filename =  PATH_ROOT . \str_replace('\\', '/', $className) . '.php';
+			$className = 'resources\\' . $excute['object'] . '\\' . $excute['src']['models'] . '\\' . ($name ? $name : $this->_params['controller']) . 'Model';
+			$filename =  DIR_ROOT . \str_replace('\\', '/', $className) . '.php';
 			if (file_exists($filename)) {
 				require_once $filename;
 				if (class_exists($className, false)) {
@@ -72,8 +72,8 @@ class Controller
 	{
 		if ($this->_params['controller']) {
 			$excute = $this->_params['excute'];
-			$className = '\\resources\\' . $excute['object']  . '\\' .  $excute['src']['libs'] . '\\View';
-			$filename =  PATH_ROOT . \str_replace('\\', '/', $className) . '.php';
+			$className = 'resources\\' . $excute['object']  . '\\' .  $excute['src']['libs'] . '\\View';
+			$filename =  DIR_ROOT . \str_replace('\\', '/', $className) . '.php';
 			if (file_exists($filename)) {
 				require_once $filename;
 				if (class_exists($className, false)) {

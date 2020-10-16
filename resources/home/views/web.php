@@ -7,15 +7,15 @@
     <link rel="apple-touch-icon" href="<?= $this->getFolderImage(false) ?>icon.png">
     <!-- Title -->
     <title><?= $this->getTitle() ?></title>
-    <base href="<?= BASE_NAME ?>" />
+    <base href="<?= URL_HOST ?>" />
     <!-- Css -->
     <?= $this->getMetaHttp() . $this->getMetaName() . $this->getCss() ?>
 </head>
 
 <body>
     <?php
-	require $this->getFileViewContent();
-	?>
+    require $this->getFileViewContent();
+    ?>
     <?= $this->getJs() ?>
 </body>
 

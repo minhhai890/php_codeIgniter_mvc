@@ -9,7 +9,7 @@ class Route
 	protected $_dataUrl; 				// Lưu đường dẫn khi gọi qua name (type array)
 	protected $_controller; 		// Lưu tên controller và phương thức hoặc lưu function (type array)
 	protected $_excute; 			// Lưu điều kiện thực hiện cho phương thức get (type boolean)
-	protected $_url = PATH_URL; 	// Lưu đường dẫn url hiện tại (type string)
+	protected $_url = URL_SITE; 	// Lưu đường dẫn url hiện tại (type string)
 	protected $_pathGroup; 				// Lưu tên where (type array)
 
 	public $fixUrl 	= '([A-z0-9_\-\.]+)';
@@ -97,7 +97,7 @@ class Route
 	// Phương thức chuyển đổi ký tự đặc biệt
 	protected function convertPattern($pattern)
 	{
-		return \str_replace(['/', '-', '.'], ['\/', '\-', '\.'], BASE_NAME . $pattern);
+		return \str_replace(['/', '-', '.'], ['\/', '\-', '\.'], URL_HOST . $pattern);
 	}
 
 	// Phương thức thiết lập pattern
@@ -169,8 +169,8 @@ class Route
 		if ($controller && $action) {
 			$this->_params['controller'] = $controller;
 			$this->_params['action'] = $action;
-			$className = '\\resources' . '\\' . $this->_excute['object'] . '\\' . $this->_excute['src']['controllers'] . '\\' . $controller . 'Controller';
-			$filename =  PATH_ROOT . \str_replace('\\', '/', $className) . '.php';
+			$className = 'resources' . '\\' . $this->_excute['object'] . '\\' . $this->_excute['src']['controllers'] . '\\' . $controller . 'Controller';
+			$filename =  DIR_ROOT . \str_replace('\\', '/', $className) . '.php';
 			if (file_exists($filename)) {
 				require_once $filename;
 				if (class_exists($className, false)) {
@@ -268,10 +268,10 @@ class Route
 							Url::redirect($this->getUrl($routename));
 						} else {
 							$excute = $this->_dataUrl[$routename]['excute'];
-							if($excute){
+							if ($excute) {
 								if (gettype($excute) == 'object') {
 									return $excute($this);
-								}else{
+								} else {
 									if ($excute = explode('@', $excute)) {
 										// Tạo đối tượng Controller và gọi phương thức xử lý
 										$this->excute($excute[0], $excute[1]);
@@ -374,7 +374,7 @@ class Route
 	// Phương thức trả về đường dẫn url
 	public function getUrl($routeName, $options = [])
 	{
-		$url = BASE_NAME;
+		$url = URL_HOST;
 		if (isset($this->_dataUrl[$routeName])) {
 			$url .= $this->_dataUrl[$routeName]['path'];
 			$pattern = ['#(\/?\-?{[A-z0-9_\-\?]+})+#'];

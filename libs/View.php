@@ -84,7 +84,7 @@ class View
 	// Phương thức lấy ra thư mục chứa giao diện  | $path = true => path or $path = false => url
 	public function getFolderView($path = true, $device = true)
 	{
-		$dir = PATH_RESOURCE;
+		$dir = DIR_RESOURCE;
 		if ($path == false) {
 			$dir = URL_RESOURCE;
 		}

@@ -8,7 +8,7 @@ use PhpOffice\PhpSpreadsheet\Style\Alignment;
 use PhpOffice\PhpSpreadsheet\Style\Fill;
 use PhpOffice\PhpSpreadsheet\Style\NumberFormat;
 
-require PATH_VENDOR;
+require DIR_VENDOR;
 class OfficeExcel{      
    
     // Phương thức tạo tên cột tương ứng trong bảng excel
@@ -238,5 +238,3 @@ class OfficeExcel{
     }
     
 }
-
-?>

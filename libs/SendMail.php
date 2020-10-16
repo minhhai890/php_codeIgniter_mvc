@@ -3,7 +3,7 @@ namespace libs;
 //Import PHPMailer classes into the global namespace
 use PHPMailer\PHPMailer\PHPMailer;
 use PHPMailer\PHPMailer\SMTP;
-require PATH_VENDOR;
+require DIR_VENDOR;
 
 class SendMail{
 	
@@ -117,5 +117,3 @@ class SendMail{
 		}
 	}
 }
-
-?>
