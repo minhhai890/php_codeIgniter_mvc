@@ -31,7 +31,9 @@ $route->get('', function ($route) {
     echo 'Welcome';
 });
 
-$route->get('testfile', '/upload.html', 'main@upload');
+$route->get('testupload', '/upload.html', 'main@upload');
+
+$route->get('testresize', '/resize.html', 'main@resize');
 
 $route->get('error', '/error.html', function ($route) {
     echo 'error 404';

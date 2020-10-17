@@ -1,20 +1,26 @@
 <?php
 
 namespace libs;
-// Chỉnh sửa lại phần upload cho phép upload 1 hay nhiều hình
+
 class Upload
 {
 	// Biến lưu dữ liệu
 	private $_data;
 
-	// Biến lưu trữ tên tập tin
+	// Biến lưu tên tập tin
 	private $_fileName;
 
-	// Biến lưu trữ kích thước tập tin
+	// Biến lưu kích thước tập tin
 	private $_fileSize;
 
-	// Biến lưu trữ phần mỡ rộng của tập tin
+	// Biến lưu kích thước tập tin tối da
+	private $_maxSize;
+
+	// Biến lưu phần mỡ rộng của tập tin
 	private $_fileExtension;
+
+	// Biến lưu phần mỡ rộng của tập tin được phép
+	private $_extensionAccess;
 
 	// Biến lưu trữ đường dẫn tạm của tập tin
 	private $_fileTmp;
@@ -61,9 +67,9 @@ class Upload
 					array_shift($this->_data);
 					$this->setParams($options);
 				}
+			} else {
+				$this->setParams($_FILES[$fileName]);
 			}
-		} else {
-			$this->_errors = 'Vui lòng chọn tập tin!';
 		}
 	}
 
@@ -80,7 +86,7 @@ class Upload
 		}
 	}
 
-	// Phương thức random
+	// Phương thức đổi tên tập tin upload
 	public function rename()
 	{
 		$search = '.' . $this->_fileExtension;
@@ -95,12 +101,22 @@ class Upload
 	}
 
 	// Phương thức thiết lập phần mở rộng
-	public function setExtension($strExtension)
+	public function setExtension($extensionAccess)
+	{
+		$this->_extensionAccess = $extensionAccess;
+	}
+
+	// Phương thức thiết lập phần mở rộng
+	public function isExtension()
 	{
 		if ($this->_fileExtension) {
-			if (strpos($strExtension, $this->_fileExtension) === false) {
-				$this->_errors = "Định dạng tập tin không hợp lệ! ( " . $strExtension . " )";
+			if ($this->_extensionAccess) {
+				if (strpos($this->_extensionAccess, $this->_fileExtension) === false) {
+					$this->_errors = "Định dạng tập tin không hợp lệ! ( " . $this->_extensionAccess . " )";
+				}
 			}
+		} else {
+			$this->_errors = 'Vui lòng chọn tập tin!';
 		}
 	}
 
@@ -113,29 +129,31 @@ class Upload
 		return false;
 	}
 
-	// Phương thức get fileTmp
-	public function getFileTmp()
-	{
-		return $this->_fileTmp;
-	}
-
 	// Phương thức thiết lập kích thước tối thiều và kích thước tối đa (đơn vị tính B)
 	public function setFileSize($maxSize)
 	{
-		if ($sizeNumeric = Func::getNumeric($maxSize)) {
-			$sizeUnit = Func::getString($maxSize);
-			if ($sizeUnit) {
-				foreach ($this->_units as $unit) {
-					if ($unit !== 'B') {
-						$sizeNumeric *= 1024;
-						if (strtoupper($sizeUnit) == $unit) {
-							break;
+		$this->_maxSize = $maxSize;
+	}
+
+	// Phương thức thiết lập kích thước tối thiều và kích thước tối đa (đơn vị tính B)
+	public function isFileSize()
+	{
+		if ($this->_maxSize) {
+			if ($sizeNumeric = Func::getNumeric($this->_maxSize)) {
+				$sizeUnit = Func::getString($this->_maxSize);
+				if ($sizeUnit) {
+					foreach ($this->_units as $unit) {
+						if ($unit !== 'B') {
+							$sizeNumeric *= 1024;
+							if (strtoupper($sizeUnit) == $unit) {
+								break;
+							}
 						}
 					}
 				}
-			}
-			if ($this->_fileSize > $sizeNumeric) {
-				$this->_errors = "Kích thước tệp quá lớn! ( kích thước tối đa: " . $maxSize . ")";
+				if ($this->_fileSize > $sizeNumeric) {
+					$this->_errors = "Kích thước tệp quá lớn! ( kích thước tối đa: " . $this->_maxSize . ")";
+				}
 			}
 		}
 	}
@@ -172,12 +190,6 @@ class Upload
 		return $flag;
 	}
 
-	// Phương thức hiển thị lỗi
-	public function getError()
-	{
-		return $this->_errors;
-	}
-
 	// Phương thức chuyển đổi đơn vị của tập tin
 	public function convertSizeUnit($totalDigit = 2, $ditance = ' ')
 	{
@@ -206,7 +218,8 @@ class Upload
 		];
 		if ($this->isError()) {
 			$responsive['status'] = 'false';
-			$responsive['error'] = $this->getError();
+			$responsive['message'] = $this->_errors;
+			$this->_errors = NULL;
 		} else {
 			$responsive['message'] = 'Tải tập tin thành công!';
 		}
@@ -214,19 +227,28 @@ class Upload
 	}
 
 	// Phương thức upload tập tin
-	public function fileUpload($rename = true)
+	public function uploadMulti()
 	{
-		$filename = $rename ? $this->rename() : $this->_fileName;
-		$destination = $this->_dir . DS . $filename;
+		$result = [$this->upload()];
+		if ($this->_data) {
+			foreach ($this->_data as $key => $options) {
+				unset($this->_data[$key]);
+				$this->setParams($options);
+				$result[] = $this->upload();
+			}
+		}
+		return $result;
+	}
+
+	// Phương thức thực hiện upload tập tin
+	public function upload()
+	{
+		$this->isExtension();
+		$this->isFileSize();
+		$filename = $this->rename();
 		if (!$this->isError()) {
-			if (@move_uploaded_file($this->_fileTmp, $destination)) {
-				if ($this->_data) {
-					if ($options = current($this->_data)) {
-						array_shift($this->_data);
-						$this->setParams($options);
-					}
-				}
-			} else {
+			$destination = $this->_dir . DS . $filename;
+			if (!@move_uploaded_file($this->_fileTmp, $destination)) {
 				$this->_errors = "Lỗi tải tập tin!";
 			}
 		}

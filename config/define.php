@@ -24,7 +24,7 @@ define('DIR_RESOURCE', DIR_ROOT . 'resources' . DS); 		    				// Đường dẫ
 define('URL_RESOURCE', URL_HOST . 'resources' . DS); 							// Đường dẫn đến thư mục resources
 
 // File Upload
-define('DIR_UPLOAD', DIR_ROOT . 'upload');										// Đường dẫn đến thư mục upload
+define('DIR_UPLOAD', DIR_ROOT . 'upload' . DS);										// Đường dẫn đến thư mục upload
 define('FILE_SIZE', '3MB'); 													// Kích thức tối đa của tập tin được tải lên
 define('FILE_EXTENSION', 'xls, xlsx, jpg');											// Định dạng tập tin tải lên hơp lệ
 
