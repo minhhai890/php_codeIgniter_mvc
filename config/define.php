@@ -2,12 +2,12 @@
 define('SCHEME', (isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] == 'on' ? 'https' : 'http') . '://');
 // Vhost or Hosting
 // define('HOST_NAME'		    , $_SERVER['HTTP_HOST']);                   	// example.com
-// define('URL_HOST'			, SCHEME . HOST_NAME);               			// http://example.com/
+// define('URL_HOST'			, SCHEME . HOST_NAME . DS);               		// http://example.com/
 // define('URL_SITE'			, URL_HOST . $_SERVER['REQUEST_URI']);     		// http://example.com/abcdef.html
 
 // Local Host
 define('HOST_NAME', $_SERVER['HTTP_HOST'] . '/CodeIgniter');    				// /mvcobject
-define('URL_HOST', SCHEME . HOST_NAME);               		    				// http://localhost/mvcobject/
+define('URL_HOST', SCHEME . HOST_NAME . DS);               		    			// http://localhost/mvcobject/
 define('URL_SITE', SCHEME . $_SERVER['HTTP_HOST'] . $_SERVER['REQUEST_URI']); 	// http://localhost/mvcobject/abcdef.html
 
 // Browser Agent

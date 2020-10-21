@@ -2,8 +2,6 @@
 
 namespace libs;
 
-use Exception;
-
 /**
  * PHP class to resize and scale images
  */
@@ -56,7 +54,7 @@ class ImageResize
      *
      * @param string $image_data
      * @return ImageResize
-     * @throws ImageResizeException
+     * @throws Exception
      */
     public static function createFromString($image_data)
     {
@@ -98,7 +96,7 @@ class ImageResize
      *
      * @param string $filename
      * @return ImageResize
-     * @throws ImageResizeException
+     * @throws Exception
      */
     public function __construct($filename)
     {
@@ -106,7 +104,7 @@ class ImageResize
             define('IMAGETYPE_WEBP', 18);
         }
         if ($filename === null || empty($filename) || (substr($filename, 0, 5) !== 'data:' && !is_file($filename))) {
-            throw new ImageResizeException('File does not exist');
+            throw new \Exception('File does not exist');
         }
 
         $finfo = finfo_open(FILEINFO_MIME_TYPE);
@@ -116,7 +114,7 @@ class ImageResize
                 $checkWebp = true;
                 $this->source_type = IMAGETYPE_WEBP;
             } else {
-                throw new ImageResizeException('Unsupported file type');
+                throw new \Exception('Unsupported file type');
             }
         } elseif (strstr(finfo_file($finfo, $filename), 'image/webp') !== false) {
             $checkWebp = true;
@@ -129,7 +127,7 @@ class ImageResize
 
         if (!$checkWebp) {
             if (!$image_info) {
-                throw new ImageResizeException('Could not read file');
+                throw new \Exception('Could not read file');
             }
 
             $this->original_w = $image_info[0];
@@ -163,11 +161,11 @@ class ImageResize
                 break;
 
             default:
-                throw new ImageResizeException('Unsupported image type');
+                throw new \Exception('Unsupported image type');
         }
 
         if (!$this->source_image) {
-            throw new ImageResizeException('Could not load image');
+            throw new \Exception('Could not load image');
         }
 
         return $this->resize($this->getSourceWidth(), $this->getSourceHeight());
@@ -184,7 +182,7 @@ class ImageResize
 
         try {
             $exif = @exif_read_data($filename);
-        } catch (Exception $e) {
+        } catch (\Exception $e) {
             $exif = null;
         }
 
@@ -256,7 +254,7 @@ class ImageResize
 
             case IMAGETYPE_WEBP:
                 if (version_compare(PHP_VERSION, '5.5.0', '<')) {
-                    throw new ImageResizeException('For WebP support PHP >= 5.5.0 is required');
+                    throw new \Exception('For WebP support PHP >= 5.5.0 is required');
                 }
                 if (!empty($exact_size) && is_array($exact_size)) {
                     $dest_image = imagecreatetruecolor($exact_size[0], $exact_size[1]);
@@ -349,7 +347,7 @@ class ImageResize
 
             case IMAGETYPE_WEBP:
                 if (version_compare(PHP_VERSION, '5.5.0', '<')) {
-                    throw new ImageResizeException('For WebP support PHP >= 5.5.0 is required');
+                    throw new \Exception('For WebP support PHP >= 5.5.0 is required');
                 }
                 if ($quality === null) {
                     $quality = $this->quality_webp;

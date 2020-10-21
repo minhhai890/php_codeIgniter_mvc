@@ -1,5 +1,5 @@
 <?php
-define('DS', '/');
+define('DS', '/'); //DIRECTORY_SEPARATOR
 define('DIR_ROOT', __DIR__ . DS);
 Autoload::register();
 class Autoload

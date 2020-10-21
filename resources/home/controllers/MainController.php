@@ -12,6 +12,10 @@ class MainController extends home\Controller
 	// Phương thức xử lý trang chủ
 	public function home()
 	{
+		echo 'home';
+		$this->_view->setTitle('test');
+		$this->_view->setShortcut('abc', 'logo.png');
+		$this->_view->render('home');
 	}
 
 	public function upload()
@@ -69,7 +73,7 @@ class MainController extends home\Controller
 		$image->quality_jpg = 100;
 
 		// Thêm một logo vào ảnh
-		$image18Plus = DIR_UPLOAD . 'facebook_1602911379.png';
+		$image18Plus = DIR_UPLOAD . 'logo.png';
 		$image->addFilter(function ($imageDesc) use ($image18Plus) {
 			$logo = imagecreatefrompng($image18Plus);
 			$logo_width = imagesx($logo);
@@ -78,15 +82,13 @@ class MainController extends home\Controller
 			$image_height = imagesy($imageDesc);
 			$image_x = $image_width - $logo_width - 10;
 			$image_y = $image_height - $logo_height - 10;
+			imagecopy($imageDesc, $logo, $image_x, 10, 0, 0, $logo_width, $logo_height);
 			imagecopy($imageDesc, $logo, $image_x, $image_y, 0, 0, $logo_width, $logo_height);
 		});
 
-		//$image->save($newfile);
+		$image->save($newfile);
 
 		// Đổi định dạng file
-		$image->save($newfile, IMAGETYPE_PNG);
+		// $image->save($newfile, IMAGETYPE_PNG);
 	}
 }
-
-//test_upload@thunganonline.com
-//Xxu4MJHPCpeJ

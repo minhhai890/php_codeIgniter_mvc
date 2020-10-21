@@ -131,7 +131,6 @@ class Route
 						$this->setUrl($v['name'], $v['path'], $v['excute']);
 					}
 				}
-				unset($data['device']);
 				$dataNew[] = $data;
 			}
 			$this->_data = $dataNew;
@@ -248,7 +247,7 @@ class Route
 		$this->_data[$key]['url'][] = [
 			'method' => $method,
 			'name' => $name,
-			'path' => DS . ltrim($path, DS),
+			'path' => ltrim($path, DS),
 			'excute' => $excute,
 			'where' => []
 		];
@@ -273,7 +272,9 @@ class Route
 									return $excute($this);
 								} else {
 									if ($excute = explode('@', $excute)) {
-										// Tạo đối tượng Controller và gọi phương thức xử lý
+										// Thiết lập giá trị excute
+										$this->_excute = $value;
+										// Tạo đối tượng Controller và gọi phương thức xử lý										
 										$this->excute($excute[0], $excute[1]);
 									}
 								}
@@ -365,7 +366,7 @@ class Route
 	public function groups($path, $excute)
 	{
 		if (gettype($excute) == 'object') {
-			$this->_pathGroup = '/' . $path;
+			$this->_pathGroup = ltrim($path, DS);
 			$excute($this);
 			$this->_pathGroup = null;
 		}
