@@ -12,7 +12,6 @@ class View
 	public $_folderViewContent;	// Thư mục chứa tập tin giao diện chi tiết
 	public $_fileViewContent;	// Tập tin hiển thị giao diện chi tiết
 	public $_folderImage;		// Thư mục chứa hình ảnh
-	public $_folderUpload;		// Thư mục tập tin tải lên từ client
 	public $_title;				// Tiêu đề của trang
 	public $_linkTags;			// Thẻ link
 	public $_metaTags;			// Thẻ meta
@@ -31,7 +30,6 @@ class View
 		$this->setFolderViewContent();
 		$this->setFileView();
 		$this->setFolderImage();
-		$this->setFolderUpload();
 	}
 
 	// Phương thức thiết lập tham số
@@ -131,21 +129,9 @@ class View
 	}
 
 	// Phương thức lấy ra thư mục chứa hình ảnh $path = true => path or $path = false => url
-	public function getFolderImage($path = true)
+	public function getFolderImage($path = true, $device = true)
 	{
-		return $this->getFolderView($path) . $this->_folderImage;
-	}
-
-	// Phương thức thiết lập thư mục tập tin tải lên từ máy khách $folder => folder or folder1.folder2
-	public function setFolderUpload($folder = 'uploads')
-	{
-		$this->_folderUpload = Func::convertCslashes($folder) . DS;
-	}
-
-	// Phương thức lấy ra thư mục tập tin tải lên từ máy khách $path = true => path or $path = false => url
-	public function getFolderUpload($path = true)
-	{
-		return $this->getFolderView($path) . $this->_folderUpload;
+		return $this->getFolderView($path, $device) . $this->_folderImage;
 	}
 
 	// Phương thức thiết lập icon shortcut như một ứng dụng mobile

@@ -34,7 +34,7 @@ define('RD_LIMIT', 10);															// Số dòng sql lấy ra tối đa
 define('DB_HOST', 'localhost');													// Đường dẫn host sql
 define('DB_USER', 'root');														// User sql
 define('DB_PWD', '');															// Password sql
-define('DB_NAME', 'bida');														// Tên database
+define('DB_NAME', 'thungan');														// Tên database
 
 // Send Email
 define('SEND_EMAIL', [

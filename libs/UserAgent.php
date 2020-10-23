@@ -45,11 +45,11 @@ namespace libs{
 
         // Phương thức trả về device
         public static function getDevice(){
-            // if(isset(self::$_data['device'])){
-            //     if(self::$_data['device'] == 'desktop' || self::$_data['device'] == 'mobile'){
-            //         return self::$_data['device'];
-            //     }
-            // }
+            if(isset(self::$_data['device'])){
+                if(self::$_data['device'] == 'desktop' || self::$_data['device'] == 'mobile'){
+                    return self::$_data['device'];
+                }
+            }
             return BROWSER_DEVICE;
 		}
 		// Phương thức trả về thông tin clients
@@ -270,4 +270,3 @@ REGEX
 		return array( PLATFORM => $platform ?: null, BROWSER => $browser ?: null, BROWSER_VERSION => $version ?: null );
 	}
 }
-?>

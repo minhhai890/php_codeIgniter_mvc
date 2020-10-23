@@ -74,15 +74,17 @@ class Controller
 			$excute = $this->_params['excute'];
 			$className = 'resources\\' . $excute['object']  . '\\' .  $excute['src']['libs'] . '\\View';
 			$filename =  DIR_ROOT . \str_replace('\\', '/', $className) . '.php';
-			if (file_exists($filename)) {
-				require_once $filename;
-				if (class_exists($className, false)) {
-					$this->_view = new $className($this->_params);
-				} else {
-					$this->_view = new \libs\View($this->_params);
-				}
-				unset($this->_params['route']);
+			if (!file_exists($filename)) {
+				$filename = DIR_LIBRARY . 'View.php';
+				$className = '\\libs\\View';
 			}
+			require_once $filename;
+			if (class_exists($className, false)) {
+				$this->_view = new $className($this->_params);
+			} else {
+				$this->_view = new \libs\View($this->_params);
+			}
+			unset($this->_params['route']);
 		}
 	}
 

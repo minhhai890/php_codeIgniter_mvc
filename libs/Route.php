@@ -139,7 +139,7 @@ class Route
 
 	// Phương thức thực hiện chương trình
 	protected function setExcute()
-	{
+	{		
 		if ($this->_excute) {
 			if (gettype($this->_excute['excute']) == 'object') {
 				return $this->_excute['excute']($this);
@@ -300,12 +300,14 @@ class Route
 			'device' => false,					// Sử dụng responsive mobile | desktop
 			'error' => [
 				'redirect'  => false,			// Cho phép chuyển về trang lỗi hoặc không chuyển
-				'startpath'  => '/',				// Đường dẫn nhận biết trang lỗi host + path
+				'startpath'  => '',				// Đường dẫn nhận biết trang lỗi host + path
 				'routename' => 'error',			// Route gọi tranh lỗi
 			],
 		];
 		if ($options) {
-			$this->_data[] = array_merge($default, $options);
+			$data = array_merge($default, $options);
+			$data['error']['startpath'] = ltrim($data['error']['startpath'], DS);
+			$this->_data[] = $data;
 		}
 	}
 
