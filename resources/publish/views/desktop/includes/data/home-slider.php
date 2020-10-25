@@ -14,7 +14,7 @@ if (isset($data) && $data) {
                     </div>
                     <div class="image">
                         <a href="" title="">
-                            <img src="images/slider/01.jpg" alt="" title="">
+                            <img src="' . $this->getData('dirImage') . 'slider/01.jpg" alt="" title="">
                         </a>
                     </div>
                 </li>';

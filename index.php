@@ -35,32 +35,15 @@ $route->get('category', 'chuyen-muc.html', 'category@index');
 // Trang chi tiết sản phẩm
 $route->get('product', 'chi-tiet.html', 'product@index');
 
+// Trang trả về đường dẫn hình ảnh
+$route->get('system/image', 'images/{filename}', 'system@viewimage')->where([
+    'filename' => '([A-z0-9\-_\.\/]+)'
+]);
+
 // Trang thông báo lỗi
 $route->get('error', '/error.html', function () {
     echo 'Trang website không tồn tại';
 });
-
-// Cấu hình hiển thị hình ảnh cho website
-$route->set([
-    'object' => 'images',                   // tên dự án					
-    'src' => [                              // thư mục chứa mã nguồn
-        'libs' => 'libs',                   // thư mục thư việc của site
-        'controllers' => 'controllers',     // thư mục chứa controller xử lý
-        'models' => 'models',               // thư mục chứa model xử lý database
-        'views' => 'views'                  // thư mục chứa giao diện
-    ],
-    'device' => false,                      // Sử dụng responsive mobile | desktop
-    'error' => [
-        'redirect'  => false,               // Cho phép chuyển về trang lỗi hoặc không chuyển   
-        'startpath'  => '',                 // Đường dẫn nhận biết trang lỗi host + path    
-        'routename' => 'error',             // Route gọi tranh lỗi
-    ],
-]);
-
-// Trang trả về đường dẫn hình ảnh
-$route->get('images/view', 'images/{filename}', 'main@view')->where([
-    'filename' => '([A-z0-9\-_\.\/]+)'
-]);
 
 
 

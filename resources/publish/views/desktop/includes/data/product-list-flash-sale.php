@@ -16,9 +16,8 @@ if (isset($data) && $data) {
                     </div>
                     <div class="infobox">
                         <a href="" title="">
-                            <h3>Sản phẩm của bạn được đặt tên như thế nào Sản phẩm của bạn được đặt tên như thế nào</h3>
-                            <span class="price"><span>₫</span><strong>9.999.999</strong></span>
-                            <span class="sold">đã bán 169</span>
+                            <p class="price"><span>₫</span><span>9.999.999</span></p>
+                            <p class="sold"><span>Đã bán 109</span><span class="sold-add" style="width: 60%"></span></p>
                         </a>
                     </div>
                 </li>';

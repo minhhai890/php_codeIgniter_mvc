@@ -3,7 +3,11 @@
 <!-- CATEGORY -->
 <?= $this->include('includes.data.home-category', [1, 2, 3, 4, 5, 6]) ?>
 <!-- BANNER -->
-<?= $this->include('includes.data.home-banner', $this->getData('slider')) ?>
+<?= $this->include('includes.data.banner1', [
+    'url' => '#',
+    'image' => 'banner/banner.png',
+    'title' => 'banner'
+]) ?>
 <!-- FLASH SALE -->
 <div class="products flash-sale">
     <div class="title clearfix">
@@ -20,11 +24,15 @@
         </div>
     </div>
     <div class="content">
-        <?= $this->include('includes.data.product-list', [1, 2, 3, 4, 5]) ?>
+        <?= $this->include('includes.data.product-list-flash-sale', [1, 2, 3, 4, 5]) ?>
     </div>
 </div>
 <!-- BANNER -->
-<?= $this->include('includes.data.home-banner', $this->getData('slider')) ?>
+<?= $this->include('includes.data.banner1', [
+    'url' => '#',
+    'image' => 'banner/banner.png',
+    'title' => 'banner'
+]) ?>
 <!-- PRODUCT -->
 <div class="products">
     <div class="title clearfix">
@@ -36,7 +44,7 @@
         </div>
     </div>
     <div class="content">
-        <?= $this->include('includes.data.product-list', [1, 2, 3, 4, 5]) ?>
+        <?= $this->include('includes.data.product-list', [1, 2, 3, 4, 5, 1, 2, 3, 4, 5, 1, 2, 3, 4, 5]) ?>
     </div>
     <div class="more">
         <button type="button" class="btn hover">Xem thêm <i class="fas fa-chevron-right"></i></button>

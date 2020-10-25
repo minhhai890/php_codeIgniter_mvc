@@ -5,7 +5,7 @@ if (isset($data) && $data) {
         $str .= '<li class="item">
                     <a href="" title="">
                         <picture>
-                            <img src="images/icons/thoi-trang-nu.png" alt="thoi trang nu, thoi trang nam">
+                            <img src="' . $this->getData('dirImage') . 'icons/thoi-trang-nu.png" alt="thoi trang nu, thoi trang nam">
                         </picture>
                         <h2>Thời trang nữ - nam</h2>
                     </a>

@@ -31,7 +31,7 @@
         <div class="content clearfix">
             <div class="col col3 left">
                 <div>
-                    <a href="#" title=""><img src="images/logo/logo_500x.png" alt=""></a>
+                    <a href="#" title=""><img src="<?= $this->getData('dirImage') ?>logo/logo_500x.png" alt=""></a>
                 </div>
             </div>
             <div class="col col4 center">
@@ -96,7 +96,7 @@
                         <ul>
                             <li>
                                 <a href="" title="">
-                                    <img src="images/icons/cham-soc-lam-dep.png" alt="">
+                                    <img src="<?= $this->getData('dirImage') ?>icons/cham-soc-lam-dep.png" alt="">
                                     <h3>Làm đẹp</h3>
                                 </a>
                                 <div class="sub2 clearfix">
@@ -118,7 +118,7 @@
                             </li>
                             <li>
                                 <a href="" title="">
-                                    <img src="images/icons/thoi-trang-nu.png" alt="">
+                                    <img src="<?= $this->getData('dirImage') ?>icons/thoi-trang-nu.png" alt="">
                                     <h3>Thời trang</h3>
                                 </a>
                                 <div class="sub2 clearfix">
@@ -152,7 +152,7 @@
                             </li>
                             <li>
                                 <a href="/danh-muc/lam-dep.html" title="Làm đẹp">
-                                    <img src="images/icons/giay-thoi-trang.png" alt="">
+                                    <img src="<?= $this->getData('dirImage') ?>icons/giay-thoi-trang.png" alt="">
                                     <h3>Giày / Dép</h3>
                                 </a>
                                 <div class="sub2 clearfix">
@@ -174,7 +174,7 @@
                             </li>
                             <li>
                                 <a href="" title="">
-                                    <img src="images/icons/tui-xach-balo.png" alt="">
+                                    <img src="<?= $this->getData('dirImage') ?>icons/tui-xach-balo.png" alt="">
                                     <h3>Balo, túi xách, ví thời trang</h3>
                                 </a>
                                 <div class="sub2 clearfix">
@@ -196,7 +196,7 @@
                             </li>
                             <li>
                                 <a href="/danh-muc/noi-that.html" title="Nội thất">
-                                    <img src="images/icons/cham-soc-suc-khoe.png" alt="">
+                                    <img src="<?= $this->getData('dirImage') ?>icons/cham-soc-suc-khoe.png" alt="">
                                     <h3>Sức khỏe</h3>
                                 </a>
                                 <div class="sub2 clearfix">

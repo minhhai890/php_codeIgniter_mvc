@@ -3,7 +3,7 @@
     <div class="subscribe clearfix">
         <div class="sbinfo col col7 clearfix">
             <div class="col">
-                <img src="images/icons/email.png" alt="">
+                <img src="<?= $this->getData('dirImage') ?>icons/email.png" alt="">
             </div>
             <div class="col">
                 <h3>Đăng ký nhận bản tin Lina house</h3>
@@ -21,7 +21,7 @@
     <div class="contact clearfix">
         <div class="company">
             <div class="logo">
-                <a href="#" title=""><img src="images/logo/logo_500x.png" alt=""></a>
+                <a href="#" title=""><img src="<?= $this->getData('dirImage') ?>logo/logo_500x.png" alt=""></a>
             </div>
             <div class="info">
                 <p>Điện thoại: <a href="tel:0932097576">0932097576</a></p>
@@ -62,11 +62,11 @@
         <div class="payment">
             <h3>Chấp nhận thanh toán</h3>
             <div>
-                <img src="images/logo/visa-card.png" alt="phuong thuc thanh toan">
-                <img src="images/logo/master-card.png" alt="phuong thuc thanh toan">
+                <img src="<?= $this->getData('dirImage') ?>logo/visa-card.png" alt="phuong thuc thanh toan">
+                <img src="<?= $this->getData('dirImage') ?>logo/master-card.png" alt="phuong thuc thanh toan">
             </div>
             <div class="bct">
-                <img src="images/logo/notification-bct.png" alt="phuong thuc thanh toan">
+                <img src="<?= $this->getData('dirImage') ?>logo/notification-bct.png" alt="phuong thuc thanh toan">
             </div>
         </div>
     </div>

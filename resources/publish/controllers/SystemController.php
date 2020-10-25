@@ -1,20 +1,13 @@
 <?php
 
-namespace resources\images\controllers;
+namespace resources\publish\controllers;
 
-class MainController extends \libs\Controller
+class SystemController extends \resources\publish\libs\Controller
 {
-	// Phương thức khởi tạo
-	public function __construct($params)
-	{
-		parent::__construct($params);
-		$this->setView();
-	}
-
 	// Phương thức
-	public function view()
+	public function viewimage()
 	{
-		$dir = DIR_RESOURCE . 'images' . DS . 'images' . DS;
+		$dir = $this->_view->getFolderImage(true, false);
 		$filename = $dir . $this->_params['filename'];
 		if (!is_file($filename)) {
 			$filename = $dir . 'logo' . DS . 'elessi.png';

@@ -10,8 +10,7 @@ class HomeController extends \resources\publish\libs\Controller
 	{
 		$slider = [1, 2, 3];
 
-
-		echo $this->route('images/view', ['filename' => 'product/product-01.png']);
+		$this->route('images/view', ['filename' => 'product/product-01.png']);
 
 		$this->_view->setData('slider', $slider);
 

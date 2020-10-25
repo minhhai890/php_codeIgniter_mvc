@@ -225,7 +225,7 @@ a.active{
     z-index: 500;
     width: 100%;
     max-width: 1280px;
-    height: 75px;
+    height: 60px;
     margin: auto;  
     border-bottom: 1px solid #CCC;
 }
@@ -235,6 +235,22 @@ a.active{
 #header .header-fixed .right .item{
     top: 10%;
     transform: translate(-50%, 10%);
+}
+#header .header-fixed .content .center input[name="keyword"]{
+    padding: 12px 30px;
+}
+#header .header-fixed .content .center button{
+    top: 14px;
+}
+#header .header-fixed .content .right .item{
+    top: 0;
+    transform: translate(-50%, 0);
+}
+#header .header-fixed .content .right .item a{
+    padding: 7px 0;
+}
+#header .header-fixed .content .right .item a > span{
+    display: inline-block;
 }
 #header .header-bottom{
     width: 100%;
@@ -1269,7 +1285,7 @@ a.active{
 #main .product-view-rating .product-view-left .title-fixed{   
     width: calc(100% - 270px);
     max-width: calc(1280px - 270px);;
-    top: 75px;   
+    top: 60px;   
     height: auto;
     margin-right: 20px;
 }
@@ -1287,13 +1303,13 @@ a.active{
     padding: 15px;
 }
 #main .product-view-rating .product-view-left .product-view{
-    scroll-margin-top: 75px;
+    scroll-margin-top: 60px;
     padding: 25px 15px 15px 15px;
 }
 #main .product-view-rating .product-view-left .product-rating,
 #main .product-view-rating .product-view-left .product-answer{
     margin-top: 20px;
-    scroll-margin-top: 125px;
+    scroll-margin-top: 95px;
 }
 #main .product-view-rating .product-view-right{   
     width: 250px; 
