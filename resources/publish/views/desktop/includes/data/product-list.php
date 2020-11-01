@@ -1,10 +1,11 @@
 <?php
 if (isset($data) && $data) {
+    $link = $this->route('product');
     $str = '<ul class="clearfix">';
     foreach ($data as $value) {
         $str .= '<li class="item">
                     <div class="imgbox">
-                        <a href="" title="">
+                        <a href="'. $link.'" title="">
                             <img src="' . $this->getData('dirImage') . 'product/product-01.png" alt="">
                         </a>
                     </div>

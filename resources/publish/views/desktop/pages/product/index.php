@@ -182,7 +182,7 @@
     <div class="products">
         <div class="title clearfix">
             <div class="col name">
-                <h2>Sản phẩm được xem nhiều nhất</h2>
+                <h2>Sản phẩm được mua nhiều nhất</h2>
             </div>
         </div>
         <div class="content">

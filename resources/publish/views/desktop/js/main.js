@@ -122,7 +122,7 @@ $(document).ready(function () {
         }, 2000);
     }
 
-    $('.products .item a').click(function () {
+    $('.product-detail .addcart').click(function () {
         addToCart();
         return false;
     });

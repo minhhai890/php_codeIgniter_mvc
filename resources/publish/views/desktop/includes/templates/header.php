@@ -90,120 +90,120 @@
     </div>
     <div class="header-bottom">
         <ul class="clearfix">
-            <li class="itemblock"><a href="#" title=""><i class="fas fa-bars"></i> Danh mục</a>
+            <li class="itemblock"><a href="javascript:void(0)" title=""><i class="fas fa-bars"></i> Danh mục</a>
                 <div class="subcate clearfix">
                     <div class="content">
                         <ul>
                             <li>
-                                <a href="" title="">
+                                <a href="<?= $this->route('category') ?>" title="">
                                     <img src="<?= $this->getData('dirImage') ?>icons/cham-soc-lam-dep.png" alt="">
                                     <h3>Làm đẹp</h3>
                                 </a>
                                 <div class="sub2 clearfix">
                                     <ul>
-                                        <li><a href="" title="" class="heading">Chăm sóc da mặt</a></li>
-                                        <li><a href="" title="">Sữa rửa mặt, mặt nạ</a></li>
-                                        <li><a href="" title="">Kem dưỡng ẩm, dưởng trắng</a></li>
-                                        <li><a href="" title="">Nước hoa hồng</a></li>
-                                        <li><a href="" title="">Kem chống nắng</a></li>
-                                        <li><a href="" title="" class="heading">Chăm sóc cơ thể</a></li>
-                                        <li><a href="" title="">Sữa tắm</a></li>
-                                        <li><a href="" title="">Nước hoa</a></li>
-                                        <li><a href="" title="">Khử mùi</a></li>
-                                        <li><a href="" title="" class="heading">Chăm sóc tóc</a></li>
-                                        <li><a href="" title="">Dầu gọi - dầu xả</a></li>
-                                        <li><a href="" title="">Dưỡng tóc, ủ tóc</a></li>
+                                        <li><a href="<?= $this->route('category') ?>" title="" class="heading">Chăm sóc da mặt</a></li>
+                                        <li><a href="<?= $this->route('category') ?>" title="">Sữa rửa mặt, mặt nạ</a></li>
+                                        <li><a href="<?= $this->route('category') ?>" title="">Kem dưỡng ẩm, dưởng trắng</a></li>
+                                        <li><a href="<?= $this->route('category') ?>" title="">Nước hoa hồng</a></li>
+                                        <li><a href="<?= $this->route('category') ?>" title="">Kem chống nắng</a></li>
+                                        <li><a href="<?= $this->route('category') ?>" title="" class="heading">Chăm sóc cơ thể</a></li>
+                                        <li><a href="<?= $this->route('category') ?>" title="">Sữa tắm</a></li>
+                                        <li><a href="<?= $this->route('category') ?>" title="">Nước hoa</a></li>
+                                        <li><a href="<?= $this->route('category') ?>" title="">Khử mùi</a></li>
+                                        <li><a href="<?= $this->route('category') ?>" title="" class="heading">Chăm sóc tóc</a></li>
+                                        <li><a href="<?= $this->route('category') ?>" title="">Dầu gọi - dầu xả</a></li>
+                                        <li><a href="<?= $this->route('category') ?>" title="">Dưỡng tóc, ủ tóc</a></li>
                                     </ul>
                                 </div>
                             </li>
                             <li>
-                                <a href="" title="">
+                                <a href="<?= $this->route('category') ?>" title="">
                                     <img src="<?= $this->getData('dirImage') ?>icons/thoi-trang-nu.png" alt="">
                                     <h3>Thời trang</h3>
                                 </a>
                                 <div class="sub2 clearfix">
                                     <ul>
-                                        <li><a href="" title="" class="heading">Thời trang nữ</a></li>
-                                        <li><a href="" title="">Áo nữ</a></li>
-                                        <li><a href="" title="">Áo khoác nữ</a></li>
-                                        <li><a href="" title="">Đầm nữ</a></li>
-                                        <li><a href="" title="">Quần nữ</a></li>
-                                        <li><a href="" title="">Chân váy</a></li>
-                                        <li><a href="" title="">Đồ bộ, đồ ngủ</a></li>
-                                        <li><a href="" title="">Đồ lót, đồ bơi nữ</a></li>
-                                        <li><a href="" title="">Nón, tất, vớ nữ</a></li>
-                                        <li><a href="" title="">Đồng hồ nữ</a></li>
-                                        <li><a href="" title="">Mắt kính</a></li>
-                                        <li><a href="" title="">Phụ kiện nữ khác</a></li>
+                                        <li><a href="<?= $this->route('category') ?>" title="" class="heading">Thời trang nữ</a></li>
+                                        <li><a href="<?= $this->route('category') ?><?= $this->route('category') ?>" title="">Áo nữ</a></li>
+                                        <li><a href="<?= $this->route('category') ?>" title="">Áo khoác nữ</a></li>
+                                        <li><a href="<?= $this->route('category') ?>" title="">Đầm nữ</a></li>
+                                        <li><a href="<?= $this->route('category') ?>" title="">Quần nữ</a></li>
+                                        <li><a href="<?= $this->route('category') ?>" title="">Chân váy</a></li>
+                                        <li><a href="<?= $this->route('category') ?>" title="">Đồ bộ, đồ ngủ</a></li>
+                                        <li><a href="<?= $this->route('category') ?>" title="">Đồ lót, đồ bơi nữ</a></li>
+                                        <li><a href="<?= $this->route('category') ?>" title="">Nón, tất, vớ nữ</a></li>
+                                        <li><a href="<?= $this->route('category') ?>" title="">Đồng hồ nữ</a></li>
+                                        <li><a href="<?= $this->route('category') ?>" title="">Mắt kính</a></li>
+                                        <li><a href="<?= $this->route('category') ?>" title="">Phụ kiện nữ khác</a></li>
                                     </ul>
                                     <ul>
-                                        <li><a href="" title="" class="heading">Thời trang nam</a></li>
-                                        <li><a href="" title="">Áo thun nam</a></li>
-                                        <li><a href="" title="">Áo sơ mi nam</a></li>
-                                        <li><a href="" title="">Áo khoác nam</a></li>
-                                        <li><a href="" title="">Áo Quần nam</a></li>
-                                        <li><a href="" title="">Đồ lót, đồ bơi nam</a></li>
-                                        <li><a href="" title="">Nón, tất, vớ nam</a></li>
-                                        <li><a href="" title="">Thắt lưng, dây nịt nam</a></li>
-                                        <li><a href="" title="">Nón nam</a></li>
-                                        <li><a href="" title="">Phụ kiện khác</a></li>
+                                        <li><a href="<?= $this->route('category') ?>" title="" class="heading">Thời trang nam</a></li>
+                                        <li><a href="<?= $this->route('category') ?>" title="">Áo thun nam</a></li>
+                                        <li><a href="<?= $this->route('category') ?>" title="">Áo sơ mi nam</a></li>
+                                        <li><a href="<?= $this->route('category') ?>" title="">Áo khoác nam</a></li>
+                                        <li><a href="<?= $this->route('category') ?>" title="">Áo Quần nam</a></li>
+                                        <li><a href="<?= $this->route('category') ?>" title="">Đồ lót, đồ bơi nam</a></li>
+                                        <li><a href="<?= $this->route('category') ?>" title="">Nón, tất, vớ nam</a></li>
+                                        <li><a href="<?= $this->route('category') ?>" title="">Thắt lưng, dây nịt nam</a></li>
+                                        <li><a href="<?= $this->route('category') ?>" title="">Nón nam</a></li>
+                                        <li><a href="<?= $this->route('category') ?>" title="">Phụ kiện khác</a></li>
                                     </ul>
                                 </div>
                             </li>
                             <li>
-                                <a href="/danh-muc/lam-dep.html" title="Làm đẹp">
+                                <a href="<?= $this->route('category') ?>" title="Làm đẹp">
                                     <img src="<?= $this->getData('dirImage') ?>icons/giay-thoi-trang.png" alt="">
                                     <h3>Giày / Dép</h3>
                                 </a>
                                 <div class="sub2 clearfix">
                                     <ul>
-                                        <li><a href="" title="" class="heading">Giày dép nữ</a></li>
-                                        <li><a href="" title="">Giày sneakers nữ</a></li>
-                                        <li><a href="" title="">Giày sandals nữ</a></li>
-                                        <li><a href="" title="">Giày cao gót</a></li>
-                                        <li><a href="" title="">Giày búp bê</a></li>
-                                        <li><a href="" title="" class="heading">Giày dép nam</a></li>
-                                        <li><a href="" title="">Giày sneakers nam</a></li>
-                                        <li><a href="" title="">Giày sandals nam</a></li>
-                                        <li><a href="" title="">Giày mọi nam</a></li>
-                                        <li><a href="" title="">Giày lười nam</a></li>
-                                        <li><a href="" title="">Dép nam</a></li>
-                                        <li><a href="" title="">Phụ kiện giày nam</a></li>
+                                        <li><a href="<?= $this->route('category') ?>" title="" class="heading">Giày dép nữ</a></li>
+                                        <li><a href="<?= $this->route('category') ?>" title="">Giày sneakers nữ</a></li>
+                                        <li><a href="<?= $this->route('category') ?>" title="">Giày sandals nữ</a></li>
+                                        <li><a href="<?= $this->route('category') ?>" title="">Giày cao gót</a></li>
+                                        <li><a href="<?= $this->route('category') ?>" title="">Giày búp bê</a></li>
+                                        <li><a href="<?= $this->route('category') ?>" title="" class="heading">Giày dép nam</a></li>
+                                        <li><a href="<?= $this->route('category') ?>" title="">Giày sneakers nam</a></li>
+                                        <li><a href="<?= $this->route('category') ?>" title="">Giày sandals nam</a></li>
+                                        <li><a href="<?= $this->route('category') ?>" title="">Giày mọi nam</a></li>
+                                        <li><a href="<?= $this->route('category') ?>" title="">Giày lười nam</a></li>
+                                        <li><a href="<?= $this->route('category') ?>" title="">Dép nam</a></li>
+                                        <li><a href="<?= $this->route('category') ?>" title="">Phụ kiện giày nam</a></li>
                                     </ul>
                                 </div>
                             </li>
                             <li>
-                                <a href="" title="">
+                                <a href="<?= $this->route('category') ?>" title="">
                                     <img src="<?= $this->getData('dirImage') ?>icons/tui-xach-balo.png" alt="">
                                     <h3>Balo, túi xách, ví thời trang</h3>
                                 </a>
                                 <div class="sub2 clearfix">
                                     <ul>
-                                        <li><a href="" title="" class="heading">Balo, vali</a></li>
-                                        <li><a href="" title="">Balo, balo mini</a></li>
-                                        <li><a href="" title="">Balo laptop</a></li>
-                                        <li><a href="" title="">Balo du lịch, phượt</a></li>
-                                        <li><a href="" title="">Cặp đựng laptop</a></li>
-                                        <li><a href="" title="" class="heading">Túi, túi xách, túi du lịch</a></li>
-                                        <li><a href="" title="">Túi thời trang nữ</a></li>
-                                        <li><a href="" title="">Túi xách, ví nam</a></li>
-                                        <li><a href="" title="">Túi xách, ví nữ</a></li>
-                                        <li><a href="" title="">Túi chóng sóc</a></li>
-                                        <li><a href="" title="">Túi trống, túi du lịch</a></li>
-                                        <li><a href="" title="" class="heading">Phụ kiện du lịch</a></li>
+                                        <li><a href="<?= $this->route('category') ?>" title="" class="heading">Balo, vali</a></li>
+                                        <li><a href="<?= $this->route('category') ?>" title="">Balo, balo mini</a></li>
+                                        <li><a href="<?= $this->route('category') ?>" title="">Balo laptop</a></li>
+                                        <li><a href="<?= $this->route('category') ?>" title="">Balo du lịch, phượt</a></li>
+                                        <li><a href="<?= $this->route('category') ?>" title="">Cặp đựng laptop</a></li>
+                                        <li><a href="<?= $this->route('category') ?>" title="" class="heading">Túi, túi xách, túi du lịch</a></li>
+                                        <li><a href="<?= $this->route('category') ?>" title="">Túi thời trang nữ</a></li>
+                                        <li><a href="<?= $this->route('category') ?>" title="">Túi xách, ví nam</a></li>
+                                        <li><a href="<?= $this->route('category') ?>" title="">Túi xách, ví nữ</a></li>
+                                        <li><a href="<?= $this->route('category') ?>" title="">Túi chóng sóc</a></li>
+                                        <li><a href="<?= $this->route('category') ?>" title="">Túi trống, túi du lịch</a></li>
+                                        <li><a href="<?= $this->route('category') ?>" title="" class="heading">Phụ kiện du lịch</a></li>
                                     </ul>
                                 </div>
                             </li>
                             <li>
-                                <a href="/danh-muc/noi-that.html" title="Nội thất">
+                                <a href="<?= $this->route('category') ?>" title="Nội thất">
                                     <img src="<?= $this->getData('dirImage') ?>icons/cham-soc-suc-khoe.png" alt="">
                                     <h3>Sức khỏe</h3>
                                 </a>
                                 <div class="sub2 clearfix">
                                     <ul>
-                                        <li><a href="" title="" class="heading">Dược mỹ phẩm</a></li>
-                                        <li><a href="" title="" class="heading">Sản phẩm thiên nhiên</a></li>
-                                        <li><a href="" title="" class="heading">Hỗ trợ tình dục</a></li>
+                                        <li><a href="<?= $this->route('category') ?>" title="" class="heading">Dược mỹ phẩm</a></li>
+                                        <li><a href="<?= $this->route('category') ?>" title="" class="heading">Sản phẩm thiên nhiên</a></li>
+                                        <li><a href="<?= $this->route('category') ?>" title="" class="heading">Hỗ trợ tình dục</a></li>
                                     </ul>
                                 </div>
                             </li>
@@ -211,10 +211,10 @@
                     </div>
                 </div>
             </li>
-            <li><a href="#" title=""><span class="itemnew overflow">Làm đẹp</span></a></li>
-            <li><a href="#" title=""><span class="itemnew overflow">Thời trang</span></a></li>
-            <li><a href="#" title="" class="overflow">Giày / dép</a></li>
-            <li><a href="#" title="" class="overflow">Sức khỏe</a></li>
+            <li><a href="<?= $this->route('category') ?>" title=""><span class="itemnew overflow">Làm đẹp</span></a></li>
+            <li><a href="<?= $this->route('category') ?>" title=""><span class="itemnew overflow">Thời trang</span></a></li>
+            <li><a href="<?= $this->route('category') ?>" title="" class="overflow">Giày / dép</a></li>
+            <li><a href="<?= $this->route('category') ?>" title="" class="overflow">Sức khỏe</a></li>
         </ul>
     </div>
 </div>
