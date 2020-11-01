@@ -9,6 +9,8 @@ body{
     background-color: #f8f8f8;
 }
 a:hover,
+a:active,
+a:focus,
 a.active{
     color: #FF5555 !important;
 }
@@ -481,6 +483,7 @@ a.active{
   padding: 0;
   position: relative;
   display: block;
+  width: 100%;
   min-width: 1024px; 
   max-width: 1280px;
   text-align: center;
@@ -1165,13 +1168,8 @@ a.active{
     padding: 12px 20px;
     text-transform: uppercase;
 }
-#main .product-detail .info .pro-add-cart button.addcart{
-    color: #FF5555;
-    background: #FFEEE8;
-    margin-left: 15px;
-}
-#main .product-detail .info .pro-add-cart button.addcart:hover{
-    background: #ffe6de;
+#main .product-detail .info .pro-add-cart button.addcart{    
+    margin: 0 0 0 15px;
 }
 #main .product-detail .info .pro-gift .title{
     padding: 10px 15px;
@@ -1356,12 +1354,17 @@ a.active{
     text-transform: uppercase;
     text-align: center;   
 }
-#main .product-view-rating .control button.addcart{
+#main button.bynow:hover,
+#main button.bynow:focus{
+    background: #ffe6de;
+    color: #FF5555 !important;
+}
+#main button.addcart{
     color: #FF5555 !important;
     background: #FFEEE8 !important;
     margin-top: 15px;
 }
-#main .product-view-rating .control button.addcart:hover{
+#main button.addcart:hover{
     background: #ffe6de !important;
 }
 
@@ -1512,10 +1515,10 @@ a.active{
     background: #CDEAF0;
     width: 700px;
     height: auto;
-    top: 20%;
+    top: 50%;
     left: 50%;
     z-index: 100;
-    transform: translate(-50%, 0);    
+    transform: translate(-50%, -50%);    
 }
 .member-form .banner{
     background: #cdeaf0; 
