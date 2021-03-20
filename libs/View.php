@@ -42,7 +42,7 @@ class View
 		$xhtml  = '<title>' . $this->_title . '</title>';
 		$xhtml .= '<base href="' . $this->_host . '">';
 		$xhtml .= '<meta name="author" content="' . Config::get('app.author') . '">';
-		$xhtml .= '<meta name="viewport" content="width=device-width, initial-scale=1.0">';
+		$xhtml .= '<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,minimum-scale=1,user-scalable=no,viewport-fit=cover">';
 		$xhtml .= '<meta property="og:site_name" content="' . Config::get('app.name') . '" />';
 		$xhtml .= '<meta property="og:type" content="website"/>';
 		$xhtml .= '<meta property="og:title" content="' . $this->_title . '" />';

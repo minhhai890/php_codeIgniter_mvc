@@ -9,7 +9,7 @@ use PhpOffice\PhpSpreadsheet\Style\Alignment;
 use PhpOffice\PhpSpreadsheet\Style\Fill;
 use PhpOffice\PhpSpreadsheet\Style\NumberFormat;
 
-require DIR_ROOT . 'vendor/autoload.php';
+@include Config::get('app.dir.vendor');
 
 class Excel
 {
