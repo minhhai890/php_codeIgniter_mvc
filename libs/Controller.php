@@ -20,9 +20,6 @@ class Controller
 	// Biến đối tượng validate input form
 	protected $_validate;
 
-	// Biến lưu số phần tử hiển thị
-	protected $_length = RD_LIMIT;
-
 	// Biến lưu giá trị lỗi
 	protected $_error;
 
@@ -32,7 +29,7 @@ class Controller
 		$this->setParams($params);
 		$this->setJson();
 		$this->setValidate();
-		//$this->setModel();
+		// $this->setModel();
 	}
 
 	// Phương thức thiết lập tham số
@@ -43,14 +40,14 @@ class Controller
 
 	/*
 	 * Phương thức khởi tạo đối tượng Model tương ứng với Controller
-	 * $modelName là tên model được truyền vào
+	 * $name là tên model được truyền vào
 	 * $params Tham số connect DB
 	 */
 	public function setModel($name = NULL, $params = array())
 	{
 		if ($this->_params['controller']) {
 			$excute = $this->_params['excute'];
-			$className = 'resources\\' . $excute['object'] . '\\' . $excute['src']['models'] . '\\' . ($name ? $name : $this->_params['controller']) . 'Model';
+			$className = $excute['prefixNamespace'] . '\\models\\' . ucfirst($name ? $name : $this->_params['controller']) . 'Model';
 			$filename =  DIR_ROOT . \str_replace('\\', '/', $className) . '.php';
 			if (file_exists($filename)) {
 				require_once $filename;
@@ -72,19 +69,17 @@ class Controller
 	{
 		if ($this->_params['controller']) {
 			$excute = $this->_params['excute'];
-			$className = 'resources\\' . $excute['object']  . '\\' .  $excute['src']['libs'] . '\\View';
+			$className = $excute['prefixNamespace']  . '\\libs\\View';
 			$filename =  DIR_ROOT . \str_replace('\\', '/', $className) . '.php';
-			if (!file_exists($filename)) {
-				$filename = DIR_LIBRARY . 'View.php';
-				$className = '\\libs\\View';
+			if (file_exists($filename)) {
+				require_once $filename;
+				if (class_exists($className, false)) {
+					$this->_view = new $className($this->_params);
+				} else {
+					$this->_view = new \libs\View($this->_params);
+				}
+				unset($this->_params['route']);
 			}
-			require_once $filename;
-			if (class_exists($className, false)) {
-				$this->_view = new $className($this->_params);
-			} else {
-				$this->_view = new \libs\View($this->_params);
-			}
-			unset($this->_params['route']);
 		}
 	}
 
@@ -105,26 +100,6 @@ class Controller
 	{
 		if (isset($this->_view)) {
 			return $this->_view->route($name, $options);
-		}
-	}
-
-	// gửi dữ liệu
-	public function postCurl($url, $data)
-	{
-		if ($url && $data) {
-			$curl = curl_init($url);
-			$content = json_encode($data);
-			curl_setopt($curl, CURLOPT_HEADER, false);
-			curl_setopt($curl, CURLOPT_RETURNTRANSFER, true);
-			curl_setopt(
-				$curl,
-				CURLOPT_HTTPHEADER,
-				array("Content-type: application/json")
-			);
-			curl_setopt($curl, CURLOPT_POST, true);
-			curl_setopt($curl, CURLOPT_POSTFIELDS, $content);
-			$response = curl_exec($curl);
-			curl_close($curl);
 		}
 	}
 
@@ -152,13 +127,58 @@ class Controller
 		return $this->_error;
 	}
 
-	// Phương thức hiển thị trang lỗi
+	// Phương thức hiển thị lỗi
 	public function pageError()
 	{
-		if ($this->_view) {
+		if (isset($this->_view->_params['route'])) {
 			$this->_view->_params['route']->error();
-		} else {
+		} elseif (isset($this->_params['route'])) {
 			$this->_params['route']->error();
 		}
+		http_response_code(500);
+	}
+
+	// Trả dữ liệu API REST
+	public function response($options)
+	{
+		$status = [
+			102 => 'Yêu cầu đã được tiếp nhận.',
+			200 => 'Yêu cầu được xử lý thành công.',
+			400 => 'Thông số truyền vào chưa hợp lệ.',
+			401 => 'Lỗi ủy quyền.',
+			403 => 'Lỗi quyền truy cập.',
+			404 => 'Yêu cầu không hợp lệ.',
+			405 => 'Phương thức HTTP không hợp lệ.',
+			500 => 'Lỗi máy chủ nội bộ'
+		];
+		if (is_numeric($options)) {
+			$options = ['code' => $options];
+		}
+		if (!isset($status[$options['code']])) {
+			$options['code'] = 404;
+		}
+		$result = [
+			'status' => ($options['code'] == 200 ? true : false),
+			'code' => $options['code'],
+			'message' => $status[$options['code']]
+		];
+		if (isset($options['message'])) {
+			$result['message'] = $options['message'];
+		}
+		if (isset($options['total'])) {
+			$result['total'] = $options['total'];
+		}
+		if (isset($options['data']) && is_array($options['data'])) {
+			$result['data'] = $options['data'];
+		}
+		return $result;
+	}
+
+	// Phương thức thông báo lỗi và dừng chương trình
+	public function exits($data)
+	{
+		header('Content-Type: application/json');
+		echo json_encode($data);
+		die();
 	}
 }

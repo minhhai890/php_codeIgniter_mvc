@@ -22,29 +22,29 @@ class Upload
 	// Biến lưu phần mỡ rộng của tập tin được phép
 	private $_extensionAccess;
 
+	// Biến lưu phần thay đổi kích thước ảnh
+	private $_resize;
+
 	// Biến lưu trữ đường dẫn tạm của tập tin
 	private $_fileTmp;
 
+	// Biến cho biết filetype là file hay là base64
+	private $_fileType;
+
 	// Biến lưu trữ đường dẫn upload
 	private $_dir;
+
+	// Biến lưu trữ đường dẫn upload file tạm
+	private $_dirTmp;
 
 	// Biến lưu đơn vị kích thước
 	private $_units = ['B', 'KB', 'MB', 'GB', 'TB'];
 
 	// Biến lưu Ftp Server
-	private $_ftpServer = FTP_SERVER;
+	private $_ftpServer;
 
-	// Biến lưu Ftp Username
-	private $_ftpUser = FTP_USER;
-
-	// Biến lưu Ftp Password
-	private $_ftpPass = FTP_PASS;
-
-	// Biến lưu Ftp Port
-	private $_ftpPort = FTP_PORT;
-
-	// Biến lưu kết nối FTP Server
-	private $_ftpConnect;
+	// Biến lưu trữ các thời gian milisecond
+	private $_prefixExtension;
 
 	// Biến lưu trữ các giá trị lỗi
 	private $_errors = NULL;
@@ -53,24 +53,62 @@ class Upload
 	public function init($fileName)
 	{
 		if (isset($_FILES[$fileName])) {
-			if (is_array($_FILES[$fileName]['name'])) {
+			if (is_array($_FILES[$fileName]['name'])) { // Multi
 				foreach ($_FILES[$fileName]['name'] as $key => $name) {
 					$this->_data[] = [
 						'name' => $name,
 						'type' => $_FILES[$fileName]['type'][$key],
-						'tmp_name' => $_FILES[$fileName]['tmp_name'][$key],
+						'tmp' => $_FILES[$fileName]['tmp_name'][$key],
 						'error' => $_FILES[$fileName]['error'][$key],
 						'size' => $_FILES[$fileName]['size'][$key]
 					];
 				}
-				if ($options = current($this->_data)) {
+				if ($item = current($this->_data)) {
 					array_shift($this->_data);
-					$this->setParams($options);
+					$this->setParams($item);
 				}
-			} else {
+			} else { // Single
 				$this->setParams($_FILES[$fileName]);
 			}
+		} else {
+			$this->_fileType = 'base64';
+			if (is_array($fileName)) { // multi file
+				foreach ($fileName as $value) {
+					if (!$this->isError()) {
+						if ($item = $this->checkBase64($value)) {
+							$this->_data[] = $item;
+							continue;
+						}
+					}
+					break;
+				}
+				if ($item = current($this->_data)) {
+					array_shift($this->_data);
+					$this->setParams($item);
+				}
+			} else { // single file				
+				if ($item = $this->checkBase64($fileName)) {
+					$this->setParams($item);
+				}
+			}
 		}
+		$this->_dirTmp = Config::get('app.dir.src') . 'api/caches';
+		$this->_prefixExtension = '-' . time() . '.' . $this->_fileExtension;
+	}
+
+	// Phương thức kiểm tra và trả về dữ liệu base64 hợp lệ
+	public function checkBase64($content)
+	{
+		if (preg_match('/^data:image\/(\w+);base64,(\S+)/', $content, $match)) {
+			return [
+				'error' => 0,
+				'exten' => $match[1],
+				'tmp' => $match[2],
+				'size' => (int) (strlen($match[2]) * 3 / 4)
+			];
+		}
+		$this->_errors = 'Sai định dạng!';
+		return false;
 	}
 
 	// Phương thức thiết lập tham số trước khi tải tập tin
@@ -79,25 +117,39 @@ class Upload
 		if ($options['error'] > 0) {
 			$this->_errors = 'Lỗi tải tập tin!';
 		} else {
-			$this->_fileName = $options['name'];
-			$this->_fileSize = $options['size'];
-			$this->_fileTmp = $options['tmp_name'];
-			$this->_fileExtension = $this->getExtension($this->_fileName);
+			$this->_fileName = @$options['name'];
+			$this->_fileSize = @$options['size'];
+			$this->_fileTmp = @$options['tmp'];
+			if (@$options['exten']) {
+				$this->_fileExtension = @$options['exten'];
+			} else {
+				$this->_fileExtension = $this->getExtension($this->_fileName);
+			}
 		}
+	}
+
+	// Phương thức thiết lập file name
+	public function setFileName($filename)
+	{
+		$this->_fileName = $filename;
 	}
 
 	// Phương thức đổi tên tập tin upload
 	public function rename()
 	{
-		$search = '.' . $this->_fileExtension;
-		$replace = '_' . time() . '.' . $this->_fileExtension;
-		return str_replace($search, $replace, $this->_fileName);
+		return $this->_fileName . $this->_prefixExtension;
 	}
 
 	// Phương thức get filename
 	public function getFileName()
 	{
 		return $this->_fileName;
+	}
+
+	// Phương thức đổi tên tập tin với kích thước
+	public function renameSize($width, $height)
+	{
+		return '-' . $width . 'x' . $height . $this->_prefixExtension;
 	}
 
 	// Phương thức thiết lập phần mở rộng
@@ -121,12 +173,9 @@ class Upload
 	}
 
 	// Phương thức lấy phần mở rộng
-	public function getExtension($path)
+	public function getExtension()
 	{
-		if ($exten = strtolower(pathinfo($path, PATHINFO_EXTENSION))) {
-			return $exten;
-		}
-		return false;
+		return $this->_fileExtension;
 	}
 
 	// Phương thức thiết lập kích thước tối thiều và kích thước tối đa (đơn vị tính B)
@@ -139,21 +188,22 @@ class Upload
 	public function isFileSize()
 	{
 		if ($this->_maxSize) {
-			if ($sizeNumeric = Func::getNumeric($this->_maxSize)) {
-				$sizeUnit = Func::getString($this->_maxSize);
-				if ($sizeUnit) {
-					foreach ($this->_units as $unit) {
-						if ($unit !== 'B') {
-							$sizeNumeric *= 1024;
-							if (strtoupper($sizeUnit) == $unit) {
-								break;
-							}
+			if (preg_match('/(\d+)(\D+)/i', $this->_maxSize, $match)) {
+				$sizeNumeric = $match[1];
+				$sizeUnit = strtoupper($match[2]);
+				foreach ($this->_units as $unit) {
+					if ($unit !== 'B') {
+						$sizeNumeric *= 1024;
+						if ($sizeUnit == $unit) {
+							break;
 						}
 					}
 				}
 				if ($this->_fileSize > $sizeNumeric) {
 					$this->_errors = "Kích thước tệp quá lớn! ( kích thước tối đa: " . $this->_maxSize . ")";
 				}
+			} else {
+				$this->_errors = "Thiết lập kích thước không đúng!";
 			}
 		}
 	}
@@ -167,17 +217,29 @@ class Upload
 	// Phương thức thiết lập đường dẫn đến thư mục
 	public function setDir($dir)
 	{
-		if (file_exists($dir)) {
-			$this->_dir = $dir;
-		} else {
-			$this->_errors = "Thư mục không tồn tại!";
-		}
+		$this->_dir = $dir;
 	}
 
 	// Phương thức trả về đường dẫn đến thư mục
 	public function getDir()
 	{
 		return $this->_dir;
+	}
+
+	// Phương thức kiểm tra thư mục tồn tại
+	public function isDir()
+	{
+		if (!file_exists($this->_dir)) {
+			$this->_errors = "Thư mục không tồn tại!";
+		}
+	}
+
+	// Phương thức kiểm tra thư mục tồn tại
+	public function isDirTmp()
+	{
+		if (!file_exists($this->_dirTmp)) {
+			$this->_errors = "Thư mục không tồn tại!";
+		}
 	}
 
 	// Phương thức kiểm tra điều kiện upload của tập tin
@@ -209,40 +271,85 @@ class Upload
 		}
 	}
 
-	// Phương thức trả kết quả upload
-	public function responsive($filename)
+	// Phương thức thêm mới logo vào ảnh
+	public function addLogo($logo)
 	{
-		$responsive = [
-			'status' => 'true',
-			'filename' => $filename
-		];
-		if ($this->isError()) {
-			$responsive['status'] = 'false';
-			$responsive['message'] = $this->_errors;
-			$this->_errors = NULL;
-		} else {
-			$responsive['message'] = 'Tải tập tin thành công!';
+		$this->_logo = $logo;
+	}
+
+	// Phương thức lưu file tạm
+	public function saveFileTmp()
+	{
+		$this->isDirTmp();
+		$this->isExtension();
+		$this->isFileSize();
+		if (!$this->isError() && $this->_fileTmp) {
+			$newFile = $this->rename();
+			$fileTmp = $this->_dirTmp . DS . $newFile;
+			if (file_put_contents($fileTmp, base64_decode($this->_fileTmp)) !== false) {
+				if ($this->_resize) {
+					$this->_fileTmp = [];
+					$imageResize = new Image($fileTmp);
+					foreach ($this->_resize as $value) {
+						$resizeName = $this->_fileName . $value['filename'];
+						$this->_fileTmp[] = $resizeName;
+						$imageResize->crop($value['width'], $value['height']);
+						if ($this->_logo) {
+							$fileLogo = $this->_logo;
+							$imageResize->addFilter(function ($imageDesc) use ($fileLogo) {
+								$logo = imagecreatefrompng($fileLogo);
+								$logo_width = imagesx($logo);
+								$logo_height = imagesy($logo);
+								$image_width = imagesx($imageDesc);
+								$image_height = imagesy($imageDesc);
+								$image_x = $image_width - $logo_width - 5;
+								$image_y = $image_height - $logo_height - 5;
+								// right top
+								// imagecopy($imageDesc, $logo, $image_x, 10, 0, 0, $logo_width, $logo_height);
+								// right bottom
+								imagecopy($imageDesc, $logo, $image_x, $image_y, 0, 0, $logo_width, $logo_height);
+							});
+						}
+						$imageResize->save($this->_dirTmp . DS . $resizeName);
+					}
+				} else {
+					$this->_fileTmp = [$newFile];
+				}
+			} else {
+				$this->_fileTmp = null;
+			}
 		}
-		return $responsive;
+		return $this->_fileTmp;
+	}
+
+	// Phương thức delete file Tạm
+	public function deleteFileTmp()
+	{
+		if ($this->_fileTmp) {
+			$this->_fileTmp[] = $this->rename();
+			foreach ($this->_fileTmp as $file) {
+				$file = $this->_dirTmp . DS . $file;
+				if (is_file($file)) {
+					@unlink($file);
+				}
+			}
+		}
+	}
+
+	// Phương thức thiết lập resize kích thức hình ảnh
+	public function resize($width, $height)
+	{
+		$this->_resize[] = [
+			'width' => $width,
+			'height' => $height,
+			'filename' => $this->renameSize($width, $height)
+		];
 	}
 
 	// Phương thức upload tập tin
-	public function uploadMulti()
-	{
-		$result = [$this->upload()];
-		if ($this->_data) {
-			foreach ($this->_data as $key => $options) {
-				unset($this->_data[$key]);
-				$this->setParams($options);
-				$result[] = $this->upload();
-			}
-		}
-		return $result;
-	}
-
-	// Phương thức thực hiện upload tập tin
 	public function upload()
 	{
+		$this->isDir();
 		$this->isExtension();
 		$this->isFileSize();
 		$filename = $this->rename();
@@ -255,38 +362,154 @@ class Upload
 		return $this->responsive($filename);
 	}
 
+	// Phương thức upload nhiều tập tin
+	public function uploadMulti()
+	{
+		$result = $this->upload();
+		$response = [
+			'status' => $result['status'],
+			'message' => $result['message'],
+			'data'	=> [$result]
+		];
+		if ($this->_data) {
+			foreach ($this->_data as $key => $options) {
+				unset($this->_data[$key]);
+				$this->setParams($options);
+				$result = $this->upload();
+				if ($response['status'] == true) {
+					$response['status'] = $result['status'];
+					$response['message'] = $result['message'];
+				}
+				$response['data'][] = $result;
+			}
+		}
+		return $response;
+	}
+
 	// Phương thức kết nối máy chủ FTP Server
 	public function ftpConnect()
 	{
-		if (!$this->_ftpConnect = ftp_connect($this->_ftpServer, $this->_ftpPort)) {
-			$this->_errors = 'Không thể kết nối máy chủ ' . $this->_ftpServer;
+		$config = Config::get('ftp');
+		if (!$this->_ftpServer = ftp_connect($config['host'], $config['port'])) {
+			$this->_errors = 'Không thể kết nối máy chủ ' . $config['host'];
 			return false;
 		}
-		if (!ftp_login($this->_ftpConnect, $this->_ftpUser, $this->_ftpPass)) {
-			$this->_errors = 'Không thể đăng nhập vào máy chủ ' . $this->_ftpServer;
+		if (!ftp_login($this->_ftpServer, $config['username'], $config['password'])) {
+			$this->_errors = 'Không thể đăng nhập vào máy chủ ' . $config['host'];
 			return false;
 		}
-		ftp_pasv($this->_ftpConnect, true);
+		ftp_pasv($this->_ftpServer, true);
 		return true;
 	}
 
 	// Phương thức đóng kết nối máy chủ FTP Server
 	public function ftpClose()
 	{
-		if ($this->_ftpConnect) {
-			ftp_close($this->_ftpConnect);
+		if ($this->_ftpServer) {
+			ftp_close($this->_ftpServer);
 		}
 	}
 
-	// Phương thức upload to FTP Server
-	public function ftpUpload($pathFile)
+	// Phương thức upload tập tin tới FTP Server
+	public function ftpUpload()
 	{
-		if ($this->_ftpConnect && !$this->isError()) {
-			$destination = $this->_dir . DS . $this->_fileName;
-			if (!ftp_put($this->_ftpConnect, $destination, $pathFile, FTP_BINARY)) {
-				$this->_errors = "Lỗi tải tập tin!";
+		if ($this->_ftpServer && !$this->isError()) {
+			if ($this->_fileType == 'base64') {
+				if ($fileTmp = $this->saveFileTmp()) {
+					$response = [
+						'status' => true,
+						'message' => $this->_errors,
+						'data'	=> []
+					];
+					foreach ($fileTmp as $file) {
+						if ($this->isError()) {
+							break;
+						}
+						$destination = $this->_dir . DS . $file;
+						$localFile = $this->_dirTmp . DS . $file;
+						if (!@ftp_put($this->_ftpServer, $destination, $localFile, FTP_BINARY)) {
+							$this->_errors = "Lỗi tải tập tin!";
+						}
+						$result = $this->responsive($destination);
+						$response['status'] 	= $result['status'];
+						$response['message'] 	= $result['message'];
+						$response['data'][] 	= $result;
+					}
+					$this->deleteFileTmp();
+					return $response;
+				}
+			} else {
+				$destination = $this->_dir . DS . $this->rename();
+				if ($this->_ftpServer && !$this->isError()) {
+					if (!@ftp_put($this->_ftpServer, $destination, $this->_fileTmp, FTP_BINARY)) {
+						$this->_errors = "Lỗi tải tập tin!";
+					}
+				}
 			}
 		}
-		return $this->responsive($pathFile);
+		return $this->responsive($this->_fileName);
+	}
+
+	// Phương thức upload nhiều tập tin tới FTP Server
+	public function ftpUploadMulti()
+	{
+		$filename = $this->_fileName;
+		$this->setFileName($filename . '1');
+		$result = $this->ftpUpload();
+		$response = [
+			'status' => $result['status'],
+			'message' => $result['message'],
+			'data'	=> [$result['data']]
+		];
+		if ($this->_data) {
+			foreach ($this->_data as $key => $options) {
+				unset($this->_data[$key]);
+				$this->setFileName($filename . ($key + 2));
+				$this->setParams($options);
+				$result = $this->ftpUpload();
+				if ($response['status'] == true) {
+					$response['status'] = $result['status'];
+					$response['message'] = $result['message'];
+				}
+				$response['data'][] = $result['data'];
+			}
+		}
+		return $response;
+	}
+
+	public function ftpMKDir($dir)
+	{
+		if ($this->_ftpServer && !$this->isError()) {
+			return @ftp_mkdir($this->_ftpServer, $dir);
+		}
+		return false;
+	}
+
+	// Phương thức xóa tập tin trên FTP Server
+	public function ftpFileDelete($filename)
+	{
+		if ($this->_ftpServer && !$this->isError()) {
+			if (!@ftp_delete($this->_ftpServer, $filename)) {
+				$this->_errors = "Tập tin không tồn tại!";
+			}
+		}
+		return $this->responsive($filename);
+	}
+
+	// Phương thức trả kết quả upload
+	public function responsive($filename)
+	{
+		$responsive = [
+			'status' => true,
+			'filename' => $filename
+		];
+		if ($this->isError()) {
+			$responsive['status'] = false;
+			$responsive['message'] = $this->_errors;
+			$this->_errors = NULL;
+		} else {
+			$responsive['message'] = 'Tải tập tin thành công!';
+		}
+		return $responsive;
 	}
 }

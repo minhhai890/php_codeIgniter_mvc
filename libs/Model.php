@@ -6,11 +6,12 @@ class Model
 {
     protected $_pdo                 = null;
     protected $_sta                 = null;
-    protected $_host                = DB_HOST;
-    protected $_user                = DB_USER;
-    protected $_pwd                 = DB_PWD;
-    protected $_db                  = DB_NAME;
-    protected $_prefix              = TB_PREFIX;
+    protected $_host                = null;
+    protected $_user                = null;
+    protected $_pwd                 = null;
+    protected $_db                  = null;
+    protected $_prefix              = null;
+    protected $_length              = null;
     protected $_tableDefault        = '';
     protected $_tableTemp           = [];
 
@@ -20,14 +21,20 @@ class Model
     protected $_data                = [];
     protected $_join                = false;
     protected $_where               = '';
+    protected $_groupby             = '';
+    protected $_having              = '';
+
     protected $_orderby             = '';
     protected $_limit               = '';
     protected $_transactionCount    = 0;
+
+    protected $_time                = 0;
 
 
     // Phương thức khởi tạo
     public function __construct($params = array())
     {
+        $this->config();
         if (!$params) {
             $params = [
                 'host' => $this->_host,
@@ -36,7 +43,20 @@ class Model
                 'db' => $this->_db,
             ];
         }
+        $this->_time = time();
         $this->connect($params);
+    }
+
+    // Phương thức thiết lập tham số kết nối
+    public function config()
+    {
+        $config = Config::get('app.db');
+        $this->_host = $config['host'];
+        $this->_db = $config['name'];
+        $this->_prefix = $config['prefix'];
+        $this->_user = $config['username'];
+        $this->_pwd = $config['password'];
+        $this->_length = $config['limit'];
     }
 
     // Phương thức kết nối cơ sở dữ liệu
@@ -155,8 +175,11 @@ class Model
     }
 
     // Phương thức trả về tên bảng hiện tại
-    public function getTable()
+    public function getTable($table = '')
     {
+        if ($table) {
+            return $this->_prefix . $table;
+        }
         if ($this->_tableTemp) {
             return $this->_prefix . $this->_tableTemp;
         }
@@ -188,7 +211,7 @@ class Model
     // Phương thức thiết lập điều kiện câu truy vấn
     public function where($column, $operator, $value)
     {
-        if (strpos($value, '(') === false) {
+        if (preg_match('/.+\s+.+/', $value) == 0) {
             $value = '"' . \addslashes($value) . '"';
         }
         $column = $this->convertColumn($column);
@@ -220,6 +243,59 @@ class Model
         return $this;
     }
 
+    // Phương thức thiết lập nhóm câu truy vấn
+    public function groupby($columns)
+    {
+        foreach ($columns as $col) {
+            if (preg_match('/(\s|\()/m', $col)) {
+                $this->_groupby .= ', ' . $col;
+            } else {
+                $col = $this->convertColumn($col);
+                if (strpos($col, '`') === false) {
+                    $this->_groupby .= ', `' . $col . '`';
+                } else {
+                    $this->_groupby .= ', ' . $col;
+                }
+            }
+        }
+        return $this;
+    }
+
+    // Phương thức thiết lập nhóm câu truy vấn
+    public function having($column, $operator, $value)
+    {
+        if (strpos($value, '(') === false) {
+            $value = '"' . \addslashes($value) . '"';
+        }
+        $column = $this->convertColumn($column);
+        if (strpos($column, '`') === false) {
+            $column = '`' . $column . '`';
+        }
+        $this->_having .= ' ' . \addslashes($column) . ' ' . $operator . ' ' . $value;
+        return $this;
+    }
+
+    // Phương thức thiết điều kiện having câu truy vấn AND
+    public function havingAnd($column, $operator, $value)
+    {
+        $this->_having .= ' AND ';
+        return $this->having($column, $operator, $value);
+    }
+
+    // Phương thức thiết điều kiện having câu truy vấn OR
+    public function havingOr($column, $operator, $value)
+    {
+        $this->_having .= ' OR ';
+        return $this->having($column, $operator, $value);
+    }
+
+    // Phương thức tạo điều kiện truy vấn having nhập chuỗi trực tiếp
+    public function havingStr($str = '')
+    {
+        $this->_having .= ' ' . $str;
+        return $this;
+    }
+
     // Phương thức sắp xếp dữ liệu ASC hoặc DESC
     public function orderby($column, $type = 'DESC')
     {
@@ -236,9 +312,34 @@ class Model
     }
 
     // Phương thức giới hạn số dòng dữ liệu
-    public function limit($position, $length = RD_LIMIT)
+    public function limit($position, $length)
     {
-        $this->_limit = ' LIMIT ' . \addslashes($position) . ', ' . \addslashes($length);
+        if (!$length) {
+            $length = $this->_length;
+        } else {
+            if ($length > $this->_length) {
+                $length = $this->_length;
+            }
+        }
+        $this->_limit = ' LIMIT ' . \addslashes($position) . ',' . \addslashes($length);
+        return $this;
+    }
+
+    // Phương thức giới hạn số dòng dữ liệu theo trang
+    public function limitPage($page, $length)
+    {
+        if (!$length) {
+            $length = $this->_length;
+        } else {
+            if ($length > $this->_length) {
+                $length = $this->_length;
+            }
+        }
+        if (!is_numeric($page) || $page < 1) {
+            $page = 1;
+        }
+        $position = ($page * $length) - $length;
+        $this->_limit = ' LIMIT ' . \addslashes($position) . ',' . \addslashes($length);
         return $this;
     }
 
@@ -250,11 +351,11 @@ class Model
             foreach ($option as $value) {
                 $value = trim($value);
                 if (!empty($value)) {
-                    $array[] = "'" . \addslashes(trim($value)) . "'";
+                    $array[] = "'" . trim($value) . "'";
                 }
             }
         }
-        return implode(',', $array);
+        return implode(',', $option);
     }
 
     // Hàng định dạng cột khi kết nối nhiều bảng
@@ -272,41 +373,59 @@ class Model
     }
 
     // Phương thức thiết lập điều kiện cho join bảng
-    public function on($condition1, $operator, $condition2)
+    public function on($condition)
     {
         $this->_join = true;
-        $this->_from .= ' ON (' . $this->convertColumn($condition1) . $operator . $this->convertColumn($condition2) . ')';
+        $this->_from .= ' ON (' . $this->convertColumn($condition) . ')';
         return $this;
     }
 
     // Phương thức inner join
-    public function innerJoin($tableName)
+    public function innerJoin($tableName, $strQuery = '')
     {
         $this->isFrom();
         if ($this->_from) {
-            $this->_from .= ' INNER JOIN `' . $this->_prefix . $tableName . '` AS ' . $tableName;
+            $this->_from .= ' INNER JOIN ';
+            if ($strQuery) {
+                $this->_from .= '(' . $strQuery . ')';
+            } else {
+                $this->_from .= '`' . $this->_prefix . $tableName . '`';
+            }
+            $this->_from .= ' AS ' . $tableName;
             $this->_tableTemp = $tableName;
         }
         return $this;
     }
 
     // Phương thức left join
-    public function leftJoin($tableName)
+    public function leftJoin($tableName, $strQuery = '')
     {
         $this->isFrom();
         if ($this->_from) {
-            $this->_from .= ' LEFT JOIN `' . $this->_prefix . $tableName . '` AS ' . $tableName;
+            $this->_from .= ' LEFT JOIN ';
+            if ($strQuery) {
+                $this->_from .= '(' . $strQuery . ')';
+            } else {
+                $this->_from .= '`' . $this->_prefix . $tableName . '`';
+            }
+            $this->_from .= ' AS ' . $tableName;
             $this->_tableTemp = $tableName;
         }
         return $this;
     }
 
     // Phương thức right join
-    public function rightJoin($tableName)
+    public function rightJoin($tableName, $strQuery = '')
     {
         $this->isFrom();
         if ($this->_from) {
-            $this->_from .= ' RIGHT JOIN `' . $this->_prefix . $tableName . '` AS ' . $tableName;
+            $this->_from .= ' RIGHT JOIN ';
+            if ($strQuery) {
+                $this->_from .= '(' . $strQuery . ')';
+            } else {
+                $this->_from .= '`' . $this->_prefix . $tableName . '`';
+            }
+            $this->_from .= ' AS ' . $tableName;
             $this->_tableTemp = $tableName;
         }
         return $this;
@@ -324,11 +443,13 @@ class Model
             $listColumns = [];
             foreach ($this->_column as $table => $column) {
                 foreach ($column as $name) {
-                    if (strpos($name, '(')) {
-                        $listColumns[] = preg_replace('/\((.+)\)/m', '(`$1`)', $name);
+                    if (preg_match('/(\s|\()/m', $name)) {
+                        $listColumns[] = $name;
                     } else {
                         if ($this->_join) {
                             $listColumns[] = $table . '.`' . $name . '`  AS ' . $table . '_' . $name;
+                        } elseif (trim($name) == '*') {
+                            $listColumns[] = $name;
                         } else {
                             $listColumns[] = '`' . $name . '`';
                         }
@@ -338,6 +459,15 @@ class Model
             return \implode(',', $listColumns);
         }
         return '';
+    }
+
+    // Phương thức thêm select thêm cột
+    public function addColumn($table, $column)
+    {
+        if (isset($this->_column[$table])) {
+            $this->_column[$table][] = $column;
+        }
+        return $this;
     }
 
     // Phương thức tạo câu truy vấn select
@@ -429,12 +559,25 @@ class Model
     public function count($column)
     {
         if ($this->_query) {
-            $query = current(array_reverse($this->_query));
-            preg_match('/where(.+)(order?)(.*)(limit?)/im', $query, $match);
-            if ($match) {
-                $items = $this->select('SELECT COUNT(`' . $column . '`) as record WHERE ' . $match[1]);
-                if ($items) {
-                    return $items['record'];
+            $item = current(array_reverse($this->_query));
+            if (preg_match('/SELECT/im', $item['sql'])) {
+                $item = $item['params'];
+                $sql = 'SELECT COUNT(' . $column . ') as record ' . $item['from'];
+                if ($item['where']) {
+                    $sql .= ' WHERE ' . $item['where'];
+                }
+                if ($item['groupby']) {
+                    $sql .= ' GROUP BY ' . $item['groupby'];
+                }
+                if ($item['having']) {
+                    $sql .= ' HAVING ' . $item['having'];
+                }
+                if ($data = $this->selectAll($sql)) {
+                    $total = count($data);
+                    if ($total == 1 && isset($data[0]['record'])) {
+                        $total = $data[0]['record'];
+                    }
+                    return (int)$total;
                 }
             }
         }
@@ -452,8 +595,27 @@ class Model
                     $query .= ' WHERE ' . $this->_where;
                 }
             }
+            if ($this->_groupby) {
+                $this->_groupby = substr($this->_groupby, 2);
+                $query .= ' GROUP BY ' . $this->_groupby;
+            }
+            if ($this->_having) {
+                if (preg_match('/having/im', $query)) {
+                    $query .=  $this->_having;
+                } else {
+                    $query .= ' HAVING ' . $this->_having;
+                }
+            }
             $query .= $this->_orderby . $this->_limit;
-            $this->_query[] = $query;
+            $this->_query[] = [
+                'sql' => $query,
+                'params' => [
+                    'from' => $this->_from,
+                    'where' => $this->_where,
+                    'groupby' => $this->_groupby,
+                    'having' => $this->_having
+                ]
+            ];
             $this->reset();
         }
         return $query;
@@ -468,6 +630,8 @@ class Model
         $this->_data           = [];
         $this->_join           = false;
         $this->_where          = '';
+        $this->_groupby        = '';
+        $this->_having         = '';
         $this->_orderby        = '';
         $this->_limit          = '';
     }
@@ -503,10 +667,10 @@ class Model
     // Phương thức hiển thị nhưng câu truy vấn
     public function showQuery()
     {
-        $list = '';
+        $list = [];
         if ($this->_query) {
-            foreach ($this->_query as $query) {
-                $list .= '<h3>' . $query . '</h3><br/>';
+            foreach ($this->_query as $value) {
+                $list[] = $value['sql'];
             }
         }
         return $list;

@@ -108,6 +108,13 @@ class Files
 		return $result;
 	}
 
+	// get all list file or directory 
+	static function listAll($path, $file = true)
+	{
+		$list = self::relist($path, $file);
+		return array_keys($list);
+	}
+
 	// get all list file or directory recursive list
 	static function relist($path, $file = true)
 	{
@@ -131,12 +138,6 @@ class Files
 		return $result;
 	}
 
-	// get all list file or directory 
-	static function listAll($path, $file = true)
-	{
-		$list = self::relist($path, $file);
-		return array_keys($list);
-	}
 
 	// Create directory
 	static function createDirectory($path)

@@ -92,5 +92,3 @@ class Json {
         return false;
     }
 }
-
-?>

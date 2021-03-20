@@ -5,6 +5,14 @@ namespace libs;
 class Func
 {
 
+	// Phương thức chuyển đổi hình ảnh sang chuỗi base64
+	public static function convertImageBase64($filename)
+	{
+		$type = pathinfo($filename, PATHINFO_EXTENSION);
+		$data = file_get_contents($filename);
+		return 'data:image/' . $type . ';base64,' . base64_encode($data);
+	}
+
 	// Phương thức chuyển đôi ký tự . thành ký tự / or \
 	public static function convertCslashes($string)
 	{
@@ -174,14 +182,54 @@ class Func
 	}
 
 	// Phương thức đệ quy menu và trả về mảng
-	public static function recursive($data, $parent = 0)
+	public static function recursive($data, $parent = 0, $level = 0)
 	{
 		$result = [];
 		foreach ($data as $key => $value) {
 			if ($value['parent'] == $parent) {
 				unset($data[$key]);
-				$value['data'] = self::recursive($data, $value['id']);
+				$value['level'] = $level + 1;
 				$result[] = $value;
+				$childs = self::recursive($data, $value['id'], $value['level']);
+				if ($childs) {
+					foreach ($childs as $item) {
+						$result[] = $item;
+					}
+				}
+			}
+		}
+		return $result;
+	}
+
+	// Phương thức đệ quy menu và trả về mảng
+	public static function recursiveChild($data, $parent = 0, $level = 0)
+	{
+		$result = [];
+		foreach ($data as $key => $value) {
+			if ($value['parent'] == $parent) {
+				unset($data[$key]);
+				$value['level'] = $level + 1;
+				$value['data'] = self::recursiveChild($data, $value['id'], $value['level']);
+				$result[] = $value;
+			}
+		}
+		return $result;
+	}
+
+	// Phương thức lấy dữ liệu trong menu đệ quy
+	public static function getRecursive($data, $key, $value)
+	{
+		$result = [];
+		foreach ($data as $item) {
+			if ($item[$key] == $value) {
+				$result = $item;
+				break;
+			} else {
+				if ($item['data']) {
+					if ($result = self::getRecursive($item['data'], $key, $value)) {
+						break;
+					}
+				}
 			}
 		}
 		return $result;
@@ -203,7 +251,7 @@ class Func
 	// Phương thức kiểm tra Email
 	public static function isEmail($email)
 	{
-		return \preg_match('#^[A-z][A-z0-9_\.]{4,31}@[A-z0-9]{2,}(\.[A-z0-9]{2,4}){1,2}$#', $email);
+		return \preg_match('#^\w+([\.-]?\w+)*@\w+([\.-]?\w+)*(\.\w{2,3})+$#', $email);
 	}
 
 	// Phương thức trả về một chuỗi ký tự số 0-9	
@@ -219,36 +267,27 @@ class Func
 	}
 
 	// Phương thức trả về số điện thoại từ một chuỗi ký tự
-	public static function getPhoneNumeric($string)
+	public static function getPhone($string)
 	{
-		$phone = false;
-		\preg_match_all('#(1|2|3|5|7|8|9)((\s|\-|\.)*\d+){7,}#', $string, $matches);
-		foreach (array_reverse($matches[0]) as $key => $value) {
-			$value = self::getNumeric($value);
-			$length = strlen($value);
-			if ($length == 9 || (($length == 10) && (substr($value, 0, 1) == '2'))) {
-				$phone = '0' . $value;
-				break;
+		if (preg_match_all('#0?(2|3|5|7|8|9)(\d|\-|\s|\.){7,}\d#m', $string, $result)) {
+			$data = [];
+			foreach ($result[0] as $phone) {
+				if ($phone = self::isPhone(self::getNumeric($phone))) {
+					$data[$phone] = '';
+				}
 			}
+			return array_keys($data);
 		}
-		return $phone;
+		return false;
 	}
 
 	// Phương thức kiểm tra số điện thoại và chuyển đổi số điện thoại từ 11 số thành 10 số
-	public static function isPhoneNumric($number)
+	public static function isPhone($phone)
 	{
-		$flag = false;
-		if ($number) {
-			$length = \strlen($number);
-			$letter = \substr($number, 0, 2);
-			if ($length == 10 && $letter !== '01' && $letter !== '02') {
-				$flag = true;
-			}
-			if ($length == 11 && $letter == '02') {
-				$flag = true;
-			}
+		if (preg_match('#^0?((3|5|7|8|9)\d{8}|2\d{9})$#', trim($phone), $result)) {
+			return '0' . $result[1];
 		}
-		return $flag;
+		return false;
 	}
 
 	// Phương thức tạo 1 chuỗi có độ dài cho trước
@@ -277,9 +316,12 @@ class Func
 	}
 
 	// Phương thức định dạng ngày tháng năm
-	public static function formatDay($date)
+	public static function formatDay($date, $minute = false)
 	{
 		if (\is_numeric($date) && $date > 0) {
+			if ($minute) {
+				return \date('d/m/Y H:i:s', $date);
+			}
 			return \date('d/m/Y', $date);
 		}
 		return '';
@@ -290,28 +332,6 @@ class Func
 	{
 		$f = new \NumberFormatter('vi', \NumberFormatter::SPELLOUT);
 		return \ucfirst($f->format($number)) . ' đồng';
-	}
-
-	// Phương thức xóa file cache json or file in folder images
-	public static function deleteFile($pathfolder, $day)
-	{
-		$handle = \opendir($pathfolder);
-		while (($filename = readdir($handle)) != false) {
-			if (\strlen($filename) > 2) {
-				$pathfile = $pathfolder . $filename;
-				if (\file_exists($pathfile)) {
-					$file = new Files();
-					if ($file->getFilename($pathfile)) {
-						$filetime = @filemtime($pathfile);
-						if ($filetime) {
-							if ((time() - $filetime) / 86400 > $day) {
-								$file->deleteFile($pathfile);
-							}
-						}
-					}
-				}
-			}
-		}
 	}
 
 	// Phương thức chuyển đổi tất cả các ký tự có thể áp dụng thành các thực thể HTML
@@ -358,7 +378,29 @@ class Func
 	// Phương thức mã hóa mật khẩu
 	public static function md5Password($password)
 	{
-		return \md5(\md5('*)2^).-+(479&##' . $password . '#8$#@%^457'));
+		return \md5(\md5('*)2dh(@*(4%%@&##' . $password . '#8$#@%^452#$!37'));
+	}
+
+	// Phương thức trả về kiểu của tập tin HEADER
+	public static function getTypeFileExtension($extension)
+	{
+		if (array_key_exists($extension, $data = [
+			'svg' => 'image/svg+xml',
+			'png' => 'image/png',
+			'gif' => 'image/gif',
+			'jpg' => 'image/jpeg',
+			'jpeg' => 'image/jpeg',
+			'ico' => 'image/vnd.microsoft.icon',
+			'woff2' => 'application/font-woff2',
+			'woff' => 'application/font-woff',
+			'ttf' => 'application/x-font-ttf',
+			'otf' => 'application/x-font-opentype',
+			'eot' => 'application/vnd.ms-fontobject',
+			'css' => 'text/css; charset: UTF-8',
+			'js' => 'application/javascript'
+		])) {
+			return $data[$extension];
+		}
 	}
 
 	// Phương thức mã hóa chuỗi ký tự
@@ -366,10 +408,10 @@ class Func
 	{
 		if ($string) {
 			$index = 1;
-			$encrypted_string = \base64_encode(time()) . self::strRandom(5) . $index;
+			$encrypted_string = \base64_encode(time()) . self::strRandom(3) . $index;
 			foreach (\str_split($string) as $item) {
 				$index++;
-				$encrypted_string .= \base64_encode($item) . self::strRandom(5) . $index;
+				$encrypted_string .= \base64_encode($item) . self::strRandom(3) . $index;
 			}
 			return \rtrim(\strtr(\base64_encode($encrypted_string), '+/', '-_'), '=');
 		}
@@ -386,10 +428,10 @@ class Func
 			$string = \explode($letter, $string);
 			$time = \base64_decode(\array_shift($string));
 			\array_pop($string);
-			$result = ['time' => $time, 'code' => ''];
+			$result = ['time' => $time, 'data' => ''];
 			foreach ($string as $item) {
 				$vChar = \substr($item, -2) . $letter;
-				$result['code'] .= \base64_decode($vChar);
+				$result['data'] .= \base64_decode($vChar);
 			}
 		}
 		return $result;

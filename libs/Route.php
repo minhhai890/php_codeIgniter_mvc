@@ -4,22 +4,58 @@ namespace libs;
 
 class Route
 {
-	protected $_data; 				// Lưu tên của phương thức get (type array)
-	protected $_params; 			// Lưu tham số của hằng số $_GET và $_POST (type array)
+	protected $_data; 					// Lưu tên của phương thức get (type array)
+	protected $_params; 				// Lưu tham số của hằng số $_GET và $_POST (type array)
 	protected $_dataUrl; 				// Lưu đường dẫn khi gọi qua name (type array)
-	protected $_controller; 		// Lưu tên controller và phương thức hoặc lưu function (type array)
-	protected $_excute; 			// Lưu điều kiện thực hiện cho phương thức get (type boolean)
-	protected $_url = URL_SITE; 	// Lưu đường dẫn url hiện tại (type string)
+	protected $_controller; 			// Lưu tên controller và phương thức hoặc lưu function (type array)
+	protected $_excute; 				// Lưu điều kiện thực hiện cho phương thức get (type boolean)
+	protected $_host; 					// Thiết lập đường dẫn host (type string)
+	protected $_url; 					// Lưu đường dẫn url hiện tại (type string)
 	protected $_pathGroup; 				// Lưu tên where (type array)
 
 	public $fixUrl 	= '([A-z0-9_\-\.]+)';
 	public $fixNumeric = '([0-9]+)';
 	public $fixString = '([A-z_\-\.]+)';
 
+	// Phương thức khởi tạo
 	public function __construct()
 	{
+		// Thiết lập url
+		$this->_url = URL_SITE;
+		$this->_host = rtrim(Config::get('app.url.host'), '/');
+		// Khởi tạo Session
+		Session::init();
 		// Thiết lập thông số trình duyệt, hệ điều hành
-		UserAgent::set();
+		Device::set();
+	}
+
+	// Phương thức thiết lập thông tin cho website
+	public function setApp($appName, $device = false)
+	{
+		if ($appName) {
+			$this->_data[] = [
+				'appName' => $appName,			// Tiền tố namespace
+				'device' => $device				// Sử dụng responsive mobile | desktop (true | false)
+			];
+			// Thiết lập load file image|css|js
+			$this->get('loadfile', '/' . $appName . '/{folder}/{filename}')->where([
+				'folder' => '(images|css|js)',
+				'filename' => '([A-z0-9\-_\.\/]+)'
+			]);
+		}
+	}
+
+	// Thiết lập trang lỗi
+	public function setError($startPath, $routeName, $redirect = false)
+	{
+		if ($this->_data) {
+			$key = Func::getLastKeyArray($this->_data);
+			$this->_data[$key]['error'] = [
+				'startpath'  => $startPath,				// Đường dẫn nhận biết trang lỗi host + path
+				'routename' => $routeName,				// Route gọi tranh lỗi
+				'redirect'  => $redirect,				// Cho phép chuyển về trang lỗi hoặc không chuyển
+			];
+		}
 	}
 
 	// Phương thức thiết lập params
@@ -97,7 +133,7 @@ class Route
 	// Phương thức chuyển đổi ký tự đặc biệt
 	protected function convertPattern($pattern)
 	{
-		return \str_replace(['/', '-', '.'], ['\/', '\-', '\.'], URL_HOST . $pattern);
+		return \str_replace(['/', '-', '.'], ['\/', '\-', '\.'], $this->_host . rtrim($pattern, '/')) . '\/?';
 	}
 
 	// Phương thức thiết lập pattern
@@ -108,12 +144,9 @@ class Route
 			foreach ($this->_data as $key => $value) {
 				if (isset($value['url'])) {
 					foreach ($value['url'] as $k => $v) {
-						if ($v['excute'] == NULL && $v['method'] == 'GET') {
-							$v['path'] .= '/{controller}/{action}';
-						}
 						$pattern = '#^' . $this->convertPattern($v['path']);
 						if ($v['method'] == 'GET') {
-							$pattern .= '(\?.+)?(\#[A-z0-9\-_]+)?$#';
+							$pattern .= '(\?.+)?(&.+)?(\#[A-z0-9\-_]+)?$#';
 						} else {
 							$pattern .= '$#';
 						}
@@ -127,7 +160,7 @@ class Route
 						unset($data['url']);
 						// Kiểm tra đường dẫn
 						$this->isPathUrl(\array_merge($data, $v));
-						// Lưu url
+						// Lưu url	
 						$this->setUrl($v['name'], $v['path'], $v['excute']);
 					}
 				}
@@ -139,23 +172,26 @@ class Route
 
 	// Phương thức thực hiện chương trình
 	protected function setExcute()
-	{		
+	{
 		if ($this->_excute) {
 			if (gettype($this->_excute['excute']) == 'object') {
 				return $this->_excute['excute']($this);
 			}
 			if ($this->_excute['excute'] == NULL) {
-				if (isset($this->_params['controller']) && isset($this->_params['action'])) {
+				if ($this->_excute['name'] == 'loadfile') {
+					// Tải tập tin image | css | js
+					$this->loadfile();
+				} elseif (isset($this->_params['controller']) && isset($this->_params['action'])) {
 					// Tạo đối tượng Controller và gọi phương thức xử lý
 					$this->excute($this->_params['controller'], $this->_params['action']);
 				} else {
 					$this->error();
 				}
-				return;
-			}
-			if ($excute = explode('@', $this->_excute['excute'])) {
-				// Tạo đối tượng Controller và gọi phương thức xử lý
-				$this->excute($excute[0], $excute[1]);
+			} else {
+				if ($excute = explode('@', $this->_excute['excute'])) {
+					// Tạo đối tượng Controller và gọi phương thức xử lý
+					$this->excute($excute[0], $excute[1]);
+				}
 			}
 		} else {
 			$this->error();
@@ -163,29 +199,33 @@ class Route
 	}
 
 	// Phương thức khởi tạo đối tượng controller
-	protected function excute($controller, $action)
+	protected function excute($controller, $action, $error = false)
 	{
 		if ($controller && $action) {
-			$this->_params['controller'] = $controller;
 			$this->_params['action'] = $action;
-			$className = 'resources' . '\\' . $this->_excute['object'] . '\\' . $this->_excute['src']['controllers'] . '\\' . $controller . 'Controller';
+			$this->_params['controller'] = $controller = ucfirst($controller);
+			$prefixNamespace = 'src' . '\\' . $this->_excute['appName'];
+			if ($this->_excute['device'] == true) {
+				$prefixNamespace .= '\\' . Device::get();
+			}
+			$className = $prefixNamespace . '\\controllers\\' . $controller . 'Controller';
 			$filename =  DIR_ROOT . \str_replace('\\', '/', $className) . '.php';
 			if (file_exists($filename)) {
 				require_once $filename;
 				if (class_exists($className, false)) {
 					$params = $this->_params;
-					$params['data'] = $this->_data;
 					$params['excute'] = $this->_excute;
-					$this->_data = NULL;
+					$params['excute']['prefixNamespace'] = $prefixNamespace;
 					$this->_params = NULL;
 					$this->_excute = NULL;
 					$params['route'] = $this;
-					$params['route']->_data = NULL;
 					$this->_controller = new $className($params);
 					$this->method($action);
 				}
 			} else {
-				$this->error();
+				if (!$error) {
+					$this->error();
+				}
 			}
 		} else {
 			$this->error();
@@ -247,67 +287,73 @@ class Route
 		$this->_data[$key]['url'][] = [
 			'method' => $method,
 			'name' => $name,
-			'path' => ltrim($path, DS),
+			'path' => $path,
 			'excute' => $excute,
 			'where' => []
 		];
 		return $this;
 	}
 
+	// Phương thức tải tập tin Image | Css | Js
+	protected function loadfile()
+	{
+		$flag = false;
+		$filename = DIR_ROOT . 'src' . DS . $this->_excute['appName'] . DS;
+		if ($this->_params['folder'] != 'images') {
+			if ($this->_excute['device'] == true) {
+				$filename .= Device::get() . DS;
+			}
+			$filename .= 'views' . DS;
+		}
+		$filename .= $this->_params['folder'] . DS . $this->_params['filename'];
+		if (is_file($filename)) {
+			if ($exten = strtolower(pathinfo($filename, PATHINFO_EXTENSION))) {
+				if ($type = Func::getTypeFileExtension($exten)) {
+					$flag = true;
+					header('Content-Type: ' . $type);
+					header('Content-Length: ' . filesize($filename));
+					echo @file_get_contents($filename);
+				}
+			}
+		}
+		if ($flag == false) {
+			http_response_code(404);
+		}
+	}
+
 	// Phương thức thông báo lỗi
 	public function error()
 	{
-		foreach (array_reverse($this->_data) as $value) {
-			if (isset($value['error']['startpath'])) {
-				$pattern = '#^' . $this->convertPattern($value['error']['startpath']) . '#';
-				if (\preg_match($pattern, $this->_url, $matches)) {
-					$routename = $value['error']['routename'];
-					if (isset($this->_dataUrl[$routename])) {
-						if ($value['error']['redirect'] == true) {
-							Url::redirect($this->getUrl($routename));
-						} else {
-							$excute = $this->_dataUrl[$routename]['excute'];
-							if ($excute) {
-								if (gettype($excute) == 'object') {
-									return $excute($this);
-								} else {
-									if ($excute = explode('@', $excute)) {
-										// Thiết lập giá trị excute
-										$this->_excute = $value;
-										// Tạo đối tượng Controller và gọi phương thức xử lý										
-										$this->excute($excute[0], $excute[1]);
+		if ($this->_data) {
+			foreach (array_reverse($this->_data) as $value) {
+				if (isset($value['error']['startpath'])) {
+					$pattern = '#^' . $this->convertPattern($value['error']['startpath']) . '#';
+					if (\preg_match($pattern, $this->_url, $matches)) {
+						$routename = $value['error']['routename'];
+						if (isset($this->_dataUrl[$routename])) {
+							if ($value['error']['redirect'] == true) {
+								header('Location: ' . $this->url($routename));
+								exit();
+							} else {
+								$excute = $this->_dataUrl[$routename]['excute'];
+								if ($excute) {
+									if (gettype($excute) == 'object') {
+										return $excute($this);
+									} else {
+										if ($excute = explode('@', $excute)) {
+											// Thiết lập giá trị excute
+											$this->_excute = $value;
+											// Tạo đối tượng Controller và gọi phương thức xử lý										
+											$this->excute($excute[0], $excute[1], true);
+										}
 									}
 								}
 							}
 						}
+						break;
 					}
 				}
 			}
-		}
-	}
-
-	// Phương thức thiết lập thông tin cho website
-	public function set($options = array())
-	{
-		$default = [
-			'object' => '',						// Tiền tố namespace					
-			'src' => [							// thư mục chứa mã nguồn
-				'libs' => 'libs',				// thư mục thư việc của site
-				'controllers' => 'controllers',	// thư mục chứa controller xử lý
-				'models' => 'models',				// thư mục chứa model xử lý database
-				'views' => 'views'				// thư mục chứa giao diện
-			],
-			'device' => false,					// Sử dụng responsive mobile | desktop
-			'error' => [
-				'redirect'  => false,			// Cho phép chuyển về trang lỗi hoặc không chuyển
-				'startpath'  => '',				// Đường dẫn nhận biết trang lỗi host + path
-				'routename' => 'error',			// Route gọi tranh lỗi
-			],
-		];
-		if ($options) {
-			$data = array_merge($default, $options);
-			$data['error']['startpath'] = ltrim($data['error']['startpath'], DS);
-			$this->_data[] = $data;
 		}
 	}
 
@@ -368,16 +414,16 @@ class Route
 	public function groups($path, $excute)
 	{
 		if (gettype($excute) == 'object') {
-			$this->_pathGroup = ltrim($path, DS);
+			$this->_pathGroup = $path;
 			$excute($this);
 			$this->_pathGroup = null;
 		}
 	}
 
 	// Phương thức trả về đường dẫn url
-	public function getUrl($routeName, $options = [])
+	public function url($routeName, $options = [])
 	{
-		$url = URL_HOST;
+		$url = $this->_host;
 		if (isset($this->_dataUrl[$routeName])) {
 			$url .= $this->_dataUrl[$routeName]['path'];
 			$pattern = ['#(\/?\-?{[A-z0-9_\-\?]+})+#'];

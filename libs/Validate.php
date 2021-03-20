@@ -33,7 +33,7 @@ class Validate
 							if (!is_null($item) && !empty($item)) {
 								if (\method_exists($this, $validate)) {
 									$item = $this->$validate($item);
-									if (\is_bool($item)) {
+									if (\is_bool($item) && $item == false) {
 										$flag = false;
 										break;
 									}
@@ -104,26 +104,50 @@ class Validate
 	public function files($options = array(), $prefix = NULL)
 	{
 		$result = [];
+		$flag = true;
 		if ($options && \is_array($options)) {
-			foreach ($options as $name) {
-				$flag = true;
-				$result[$prefix . $name] = null;
-				if (isset($_FILES[$name])) {
-					if (is_array($_FILES[$name]['error'])) { // multiple						
-						foreach ($_FILES[$name]['error'] as $error) {
-							if ($error > 0) {
+			foreach ($options as $name => $validate) {
+				$item = ((isset($_FILES[$name])) ? $_FILES[$name] : null);
+				if ($validate) {
+					// require
+					if (\strpos($validate, 'require') !== false) {
+						if (is_null($item) || $item == '') {
+							$flag = false;
+							break;
+						}
+						$validate = \preg_replace('/\|?require\|?/', '', $validate);
+					}
+				}
+				if ($item) { // Check
+					if ($validate) {
+						// Multi
+						if ($validate == 'multi') {
+							if (!is_array($item['error'])) {
 								$flag = false;
 								break;
+							} else {
+								foreach ($item['error'] as $error) {
+									if ($error > 0) {
+										$flag = false;
+										break;
+									}
+								}
 							}
+						} else {
+							$flag = false;
+							break;
 						}
-					} elseif ($_FILES[$name]['error'] > 0) {
-						$flag = false;
+					} else { // Single
+						if (is_array($item['error'])) {
+							$flag = false;
+							break;
+						} elseif ($item['error'] > 0) {
+							$flag = false;
+							break;
+						}
 					}
-					$result[$prefix . $name] = $_FILES[$name];
-				}else{
-					$flag = false;
-					break;
 				}
+				$result[$prefix . $name] = $item;
 			}
 		}
 		// trả kết quả
@@ -179,7 +203,16 @@ class Validate
 	// Phương thức kiểm tra số và trả về $input nếu đúng, null nếu sai
 	public function numeric($input)
 	{
-		if (preg_match('/^\d+$/', $input)) {
+		if (preg_match('/^(\d+(\.|,)?\d*)+$/', $input)) {
+			return \preg_replace('#\D#m', '', $input);
+		}
+		return;
+	}
+
+	// Phương thức kiểm tra json và trả về $input nếu đúng, null nếu sai
+	public function json($input)
+	{
+		if (json_decode($input)) {
 			return $input;
 		}
 		return;

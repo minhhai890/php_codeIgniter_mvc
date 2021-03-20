@@ -1,7 +1,10 @@
 <?php
 define('DS', '/'); //DIRECTORY_SEPARATOR
 define('DIR_ROOT', __DIR__ . DS);
+define('SCHEME', (isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] == 'on' ? 'https' : 'http') . '://');
+define('URL_SITE', SCHEME . $_SERVER['HTTP_HOST'] . $_SERVER['REQUEST_URI']);
 Autoload::register();
+libs\Config::set();
 class Autoload
 {
 	public static function loadClassLoader($class)
@@ -14,18 +17,6 @@ class Autoload
 
 	public static function register()
 	{
-		self::config();
 		spl_autoload_register(array('Autoload', 'loadClassLoader'), true, true);
-	}
-
-	public static function config()
-	{
-		$folder = DIR_ROOT . 'config';
-		$handle = opendir($folder);
-		while (($filename = readdir($handle)) != false) {
-			if (strlen($filename) > 2) {
-				require_once $folder . DS . $filename;
-			}
-		}
 	}
 }

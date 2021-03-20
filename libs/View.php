@@ -11,15 +11,18 @@ class View
 	public $_fileView;			// Tập tin hiển thị giao diện
 	public $_folderViewContent;	// Thư mục chứa tập tin giao diện chi tiết
 	public $_fileViewContent;	// Tập tin hiển thị giao diện chi tiết
-	public $_folderImage;		// Thư mục chứa hình ảnh
+	public $_host;				// Đường dẫn host
+	public $_viewUrl;			// Đường dẫn CSS | JS
+	public $_imgUrl;			// Đường dẫn hình ảnh
+	public $_folderPublic;		// Thư mục hiển thị ra bên ngoài người dùng
 	public $_title;				// Tiêu đề của trang
-	public $_linkTags;			// Thẻ link
-	public $_metaTags;			// Thẻ meta
+	public $_headTags;			// Thẻ tags head
+	public $_customCode;		// Code tùy chỉnh
 	public $_cssTags;			// Thẻ css
 	public $_jsTags;			// Thẻ js
 	public $_data;				// Lựu dữ liệu được truyền từ controller
 	public $_device = '';		// Desktop | Mobile
-	public $_phpExt = '.php';	// Phần mở rộng của tập tin
+	public $_exten = '.php';	// Phần mở rộng của tập tin
 
 	// Phương thức khởi tạo
 	public function __construct($params)
@@ -29,7 +32,24 @@ class View
 		$this->setFolderView();
 		$this->setFolderViewContent();
 		$this->setFileView();
-		$this->setFolderImage();
+		$this->setViewUrl();
+		$this->setImageUrl();
+	}
+
+	// Phương thức trả về tập hợp thẻ trong head
+	public function head()
+	{
+		$xhtml  = '<title>' . $this->_title . '</title>';
+		$xhtml .= '<base href="' . $this->_host . '">';
+		$xhtml .= '<meta name="author" content="' . Config::get('app.author') . '">';
+		$xhtml .= '<meta name="viewport" content="width=device-width, initial-scale=1.0">';
+		$xhtml .= '<meta property="og:site_name" content="' . Config::get('app.name') . '" />';
+		$xhtml .= '<meta property="og:title" content="' . $this->_title . '" />';
+		$xhtml .= $this->tagsHead();
+		$xhtml .= $this->getCssTags();
+		$xhtml .= $this->getJsTags();
+		$xhtml .= $this->customCode();
+		return $xhtml;
 	}
 
 	// Phương thức thiết lập tham số
@@ -50,122 +70,83 @@ class View
 	public function setDevice()
 	{
 		if ($this->_params['excute']['device'] == true) {
-			$this->_device = UserAgent::getDevice();
-		}
-	}
-
-	// Phương thức trả về một object
-	public function setObject($objectName)
-	{
-		$object = Func::getRowArray($this->_params['data'], 'object', $objectName);
-		if ($object) {
-			$params = $this->_params;
-			$params['excute'] = $object;
-			return new View($params);
+			$this->_device = Device::get() . DS;
 		}
 	}
 
 	// Phương thức thiết lập thư mục chứa giao diện | $folder => folder or folder1.folder2
 	public function setFolderView()
 	{
-		$folderView = $this->_params['excute']['object'] . DS . $this->_params['excute']['src']['views'] . DS;
-		$this->_folderView = Func::convertCslashes($folderView);
+		$this->_folderView = 'src' . DS . $this->_params['excute']['appName'] . DS . $this->_device . 'views' . DS;
 	}
 
 	// Phương thức lấy ra thư mục chứa giao diện  | $path = true => path or $path = false => url
-	public function getFolderView($path = true, $device = true)
+	public function getFolderView()
 	{
-		$dir = DIR_RESOURCE;
-		if ($path == false) {
-			$dir = URL_RESOURCE;
-		}
-		if ($device == true && $this->_device) {
-			return $dir . $this->_folderView . $this->_device . DS;
-		} else {
-			return $dir . $this->_folderView;
-		}
+		return DIR_ROOT . $this->_folderView;
 	}
 
-	// Phương thức thiết lập tập tin hiển thị giao diện | $filename => name or folder.name
+	// Phương thức thiết lập tập tin hiển thị giao diện | $filename => name
 	public function setFileView($filename = 'web')
 	{
-		$this->_fileView = Func::convertCslashes($filename) . $this->_phpExt;
+		$this->_fileView = $filename . $this->_exten;
 	}
 
 	// Phương thức lấy ra tập tin hiển thị giao diện | $path = true => path or $path = false => url
-	public function getFileView($path = true)
+	public function getFileView()
 	{
-		return $this->getFolderView($path) . $this->_fileView;
+		return $this->getFolderView() . $this->_fileView;
 	}
 
 	// Phương thức thiết lập thư mục chứa tập tin giao diện chi tiết | $folder => folder or folder1.folder2
 	public function setFolderViewContent($folder = 'pages')
 	{
-		$this->_folderViewContent = Func::convertCslashes($folder) . DS;
+		$this->_folderViewContent = $folder . DS;
 	}
 
 	// Phương thức lấy ra thư mục chứa tập tin giao diện chi tiết | $path = true => path or $path = false => url
-	public function getFolderViewContent($path = true)
+	public function getFolderViewContent()
 	{
-		return $this->getFolderView($path) . $this->_folderViewContent;
+		return $this->getFolderView() . $this->_folderViewContent;
 	}
 
 	// Phương thức thiết lập tập tin hiển thị giao diện thay đổi | $filename => name or folder.name
 	public function setFileViewContent($filename)
 	{
-		$this->_fileViewContent = $this->_folderViewContent . Func::convertCslashes($filename) . $this->_phpExt;
+		$this->_fileViewContent = $this->_folderViewContent . Func::convertCslashes($filename) . $this->_exten;
 	}
 
 	// Phương thức thiết lập tập tin hiển thị giao diện thay đổi | $path = true => path or $path = false => url
-	public function getFileViewContent($path = true)
+	public function getFileViewContent()
 	{
-		return $this->getFolderView($path) . $this->_fileViewContent;
+		return $this->getFolderView() . $this->_fileViewContent;
 	}
 
-	// Phương thức thiết lập thư mục chứa hình ảnh $folder => folder or folder1.folder2
-	public function setFolderImage($folder = 'images')
+	// Phương thức thiết lập đường dẫn CSS | JS
+	public function setViewUrl()
 	{
-		$this->_folderImage = Func::convertCslashes($folder) . DS;
+		$this->_host = rtrim(Config::get('app.url.host'), '/') . DS;
+		$this->_viewUrl = $this->_host . @$this->_params['excute']['appName'] . DS;
 	}
 
-	// Phương thức lấy ra thư mục chứa hình ảnh $path = true => path or $path = false => url
-	public function getFolderImage($path = true, $device = true)
+	// Phương thức thiết lập đường dẫn chứa hình ảnh
+	public function setImageUrl()
 	{
-		return $this->getFolderView($path, $device) . $this->_folderImage;
+		$this->_imgUrl = rtrim(Config::get('app.url.image'), '/') . DS;
 	}
 
-	// Phương thức thiết lập icon shortcut như một ứng dụng mobile
-	public function setShortcut($name, $icon)
+	// Phương thức trả về đường dẫn của một hình ảnh với /views/{$pathFile}
+	// Đường dẫn hình ảnh bên trong code
+	public function imageInside($pathFile)
 	{
-		$filename = $this->getFolderView() . 'manifest.json';
-		$urlPath = $this->getFolderView(false);
-		if (!file_exists($filename)) {
-			$content = [
-				"version" => "1.0",
-				"lang" => "en",
-				"name" => $name,
-				"scope" => "/",
-				"display" => "fullscreen",
-				"start_url" =>  URL_HOST,
-				"short_name" => $name,
-				"description" => "",
-				"orientation" => "portrait",
-				"background_color" => "#000000",
-				"theme_color" => "#000000",
-				"generated" => "true",
-				"icons" => [
-					[
-						"src" => $urlPath . $icon,
-						"sizes" => "36x36",
-						"type" => "image/png"
-					]
-				]
-			];
-			$json = new Json();
-			$json->write($filename, $content);
-		}
-		$this->_linkTags .= '<link href="' . $urlPath . $icon . '" type="image/png" rel="shortcut icon"/>';
-		$this->_linkTags .= '<link rel="manifest" href="' . $urlPath . 'manifest.json">';
+		return $this->_viewUrl . @$this->_params['excute']['appName'] . DS . 'images' . DS . $pathFile;
+	}
+
+	// Phương thức trả về đường dẫn của một hình ảnh với /views/{$pathFile}
+	// Đường dẫn hình ảnh bên ngoài
+	public function imageOutside($pathFile)
+	{
+		return $this->_imgUrl . $pathFile;
 	}
 
 	// Phương thức thiết lập title
@@ -180,51 +161,143 @@ class View
 		return $this->_title;
 	}
 
-	// Phương thứ lấy ra title
-	public function getTitleTags()
+	// Phương thức tạo thẻ tags url
+	public function tagsUrl($url)
 	{
-		return '<title>' . $this->_title . '</title>';
+		$this->_headTags .= '<meta property="og:url" content="' . $url . '" />';
+	}
+
+	// Phương thức tạo thẻ tags image url
+	public function tagsImageUrl($urlImage)
+	{
+		if ($exten = strtolower(pathinfo($urlImage, PATHINFO_EXTENSION))) {
+			if ($type = Func::getTypeFileExtension($exten)) {
+				$this->_headTags .= '<meta property="og:image" content="' . $urlImage . '" />';
+				$this->_headTags .= '<meta property="og:image:type" content="' . $type . '">';
+			}
+		}
+	}
+
+	// Phương thức tạo thẻ tags keywords
+	public function tagsKeywords($content)
+	{
+		$this->_headTags .= '<meta name="keywords" content="' . $content . '" />';
+	}
+
+	// Phương thức tạo thẻ tags description
+	public function tagsDescription($content)
+	{
+		$this->_headTags .= '<meta name="description" content="' . $content . '" />';
+		$this->_headTags .= '<meta property="og:description" content="' . $content . '" />';
+	}
+
+	// Phương thức thiết lập icon shortcut như một ứng dụng mobile
+	public function shortcut($imgIcon)
+	{
+		$this->_headTags .= '<link href="' . $this->imageInside($imgIcon) . '" type="image/png" rel="shortcut icon"/>';
+	}
+
+	// Phương thức thiết lập trình duyệt như một ứng dụng mobile app
+	public function getManifest($name, $icon)
+	{
+		echo json_encode([
+			"version" => "1.0",
+			"lang" => "en",
+			"name" => $name,
+			"scope" => "/",
+			"display" => "fullscreen",
+			"start_url" =>  $this->_host,
+			"short_name" => $name,
+			"description" => "",
+			"orientation" => "portrait",
+			"background_color" => "#000000",
+			"theme_color" => "#000000",
+			"generated" => "true",
+			"icons" => [
+				[
+					"src" => $this->_imgUrl . $icon,
+					"sizes" => "36x36",
+					"type" => "image/png"
+				]
+			]
+		]);
+	}
+
+	// Phương thức thiết lập icon shortcut như một ứng dụng mobile
+	public function tagsManifest()
+	{
+		$this->_headTags .= '<link rel="manifest" href="' . $this->_viewUrl . 'manifest.json">';
+	}
+
+	// Phương thức tạo thuộc tính schema
+	public function schema($name, $image, $description, $rating = [])
+	{
+		$this->_headTags .= '<script type="application/ld+json">
+			{
+				"@context": "https://schema.org",
+				"name": "' . $name . '",
+				"image": "' . $image . '",
+				"description": "' . $description . '",
+				"sku": "CTG-10",
+				"review": {
+					"@type": "Review",
+					"reviewRating": {
+						"@type": "Rating",
+						"ratingValue": "5",
+						"bestRating": "5"
+					},
+					"reviewBody": "' . @$rating['content'] . '",
+					"author": {
+						"@type": "Person",
+						"name": "' . @$rating['name'] . '"
+					}
+				},
+				"brand": {
+					"@type": "Brand",
+					"name": "LinaHouse"
+				},
+				"@type": "Organization",
+				"aggregateRating": {
+					"@type": "AggregateRating",
+					"ratingValue": "4.9",
+					"bestRating": "5",
+					"ratingCount": "' . @$rating['count'] . '"
+				}
+			}
+			</script>';
 	}
 
 	// Phương thức thiết lập thẻ link tags
-	public function setLinkTags($tags)
+	public function tagsHead($tags = '')
 	{
-		$this->_linkTags .= $tags;
+		if ($tags) {
+			$this->_headTags .= $tags;
+		} else {
+			return $this->_headTags;
+		}
 	}
 
-	// Phương thức trả về thẻ link tags
-	public function getLinkTags()
+	// Phương thức thiết lập thẻ link tags
+	public function customCode($code = '')
 	{
-		return $this->_linkTags;
-	}
-
-	// Phương thức thiết lập thẻ meta
-	public function setMetaTags($tags)
-	{
-		$this->_metaTags .= $tags;
-	}
-
-	// Phương thức trả về thẻ meta
-	public function getMetaTags()
-	{
-		return $this->_metaTags;
+		if ($code) {
+			$this->_customCode .= $code;
+		} else {
+			return $this->_customCode;
+		}
 	}
 
 	// Phương thức thiết lập link file css
-	public function setCssTags($link, $onPage = false)
+	public function setCssTags($path, $onPage = false)
 	{
-		if ($link) {
+		if ($path) {
 			if ($onPage == true) {
-				if (Func::getHost($link) == HOST_NAME) {
-					$filename = $this->getFolderView() . $link;
-					if (is_file($filename)) {
-						if ($content = file_get_contents($filename)) {
-							$this->_cssTags .= '<style type="text/css">' . $content . '</style>';
-						}
-					}
+				$filename = $this->_viewUrl . $path;
+				if ($content = @file_get_contents($filename)) {
+					$this->_cssTags .= '<style type="text/css">' . $content . '</style>';
 				}
 			} else {
-				$this->_cssTags .= '<link rel="stylesheet" type="text/css" href="' . $this->getFolderView(false) . $link . '">';
+				$this->_cssTags .= '<link rel="stylesheet" type="text/css" href="' . $this->_viewUrl . $path . '">';
 			}
 		}
 	}
@@ -233,8 +306,8 @@ class View
 	public function setMultiCssTags($options, $onPage = false)
 	{
 		if ($options) {
-			foreach ($options as $link) {
-				$this->setCssTags($link, $onPage);
+			foreach ($options as $path) {
+				$this->setCssTags($path, $onPage);
 			}
 		}
 	}
@@ -246,20 +319,16 @@ class View
 	}
 
 	// Phương thức thiết lập link file js
-	public function setJsTags($link, $onPage = false)
+	public function setJsTags($path, $onPage = false)
 	{
-		if ($link) {
+		if ($path) {
 			if ($onPage == true) {
-				if (Func::getHost($link) == HOST_NAME) {
-					$filename = $this->getFolderView() . $link;
-					if (is_file($filename)) {
-						if ($content = file_get_contents($filename)) {
-							$this->_jsTags .= '<script type="text/javascript" src="' . $content . '"></script>';
-						}
-					}
+				$filename = $this->_viewUrl . $path;
+				if ($content = @file_get_contents($filename)) {
+					$this->_jsTags .= '<script type="text/javascript">' . $content . '</script>';
 				}
 			} else {
-				$this->_jsTags .= '<script type="text/javascript" src="' . $this->getFolderView(false) . $link . '"></script>';
+				$this->_jsTags .= '<script type="text/javascript" src="' . $this->_viewUrl . $path . '"></script>';
 			}
 		}
 	}
@@ -268,8 +337,8 @@ class View
 	public function setMultiJsTags($options, $onPage = false)
 	{
 		if ($options) {
-			foreach ($options as $link) {
-				$this->setJsTags($link, $onPage);
+			foreach ($options as $path) {
+				$this->setJsTags($path, $onPage);
 			}
 		}
 	}
@@ -289,14 +358,14 @@ class View
 	// Phương thức lấy data
 	public function getData($name)
 	{
-		if (gettype($this->_data) == 'object') {
-			if (isset($this->_data->$name)) {
-				return $this->_data->$name;
-			}
-		}
 		if (gettype($this->_data) == 'array') {
 			if (isset($this->_data[$name])) {
 				return $this->_data[$name];
+			}
+		}
+		if (gettype($this->_data) == 'object') {
+			if (isset($this->_data->$name)) {
+				return $this->_data->$name;
 			}
 		}
 	}
@@ -306,14 +375,14 @@ class View
 	{
 		$data = $this->getData($name);
 		if ($data) {
-			if (gettype($data) == 'object') {
-				if (isset($data->$item)) {
-					return $data->$item;
-				}
-			}
 			if (gettype($data) == 'array') {
 				if (isset($data[$item])) {
 					return $data[$item];
+				}
+			}
+			if (gettype($data) == 'object') {
+				if (isset($data->$item)) {
+					return $data->$item;
 				}
 			}
 		}
@@ -322,7 +391,7 @@ class View
 	// Phương thức include
 	public function include($filename, $data = null)
 	{
-		$filename = $this->getFolderView() . Func::convertCslashes($filename) . $this->_phpExt;
+		$filename = $this->getFolderView() . Func::convertCslashes($filename) . $this->_exten;
 		if (file_exists($filename)) {
 			if (($view = include $filename) != 1) {
 				return $view;
@@ -331,9 +400,9 @@ class View
 	}
 
 	// Phương thức include folder view content
-	public function includeFolderContent($filename, $data = null)
+	public function includeView($filename, $data = null)
 	{
-		$filename = $this->getFolderViewContent() . Func::convertCslashes($filename) . $this->_phpExt;
+		$filename = $this->getFolderViewContent() . Func::convertCslashes($filename) . $this->_exten;
 		if (file_exists($filename)) {
 			if (($view = include $filename) != 1) {
 				return $view;
@@ -345,8 +414,15 @@ class View
 	public function route($name, $options = [])
 	{
 		if ($this->_params['route']) {
-			return $this->_params['route']->getUrl($name, $options);
+			return $this->_params['route']->url($name, $options);
 		}
+	}
+
+	// Phương thức chuyển trang tới đường đẫn url
+	public function redirect($url)
+	{
+		header('Location: ' . $url);
+		exit();
 	}
 
 	// Phương thức render nạp tập tin giao diện $fileName => name or folder.name
