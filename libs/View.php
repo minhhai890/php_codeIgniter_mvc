@@ -44,6 +44,7 @@ class View
 		$xhtml .= '<meta name="author" content="' . Config::get('app.author') . '">';
 		$xhtml .= '<meta name="viewport" content="width=device-width, initial-scale=1.0">';
 		$xhtml .= '<meta property="og:site_name" content="' . Config::get('app.name') . '" />';
+		$xhtml .= '<meta property="og:type" content="website"/>';
 		$xhtml .= '<meta property="og:title" content="' . $this->_title . '" />';
 		$xhtml .= $this->tagsHead();
 		$xhtml .= $this->getCssTags();
@@ -165,6 +166,7 @@ class View
 	public function tagsUrl($url)
 	{
 		$this->_headTags .= '<meta property="og:url" content="' . $url . '" />';
+		$this->_headTags .= '<link rel="canonical" href="' . $url . '" />';
 	}
 
 	// Phương thức tạo thẻ tags image url
