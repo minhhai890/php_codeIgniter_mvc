@@ -42,7 +42,12 @@ class View
 		$xhtml  = '<title>' . $this->_title . '</title>';
 		$xhtml .= '<base href="' . $this->_host . '">';
 		$xhtml .= '<meta name="author" content="' . Config::get('app.author') . '">';
-		$xhtml .= '<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,minimum-scale=1,user-scalable=no,viewport-fit=cover">';
+		$xhtml .= '<meta name="robots" content="all">';
+		$xhtml .= '<meta name="generator" content="Good Market Shop"/>';
+		$xhtml .= '<meta name="language" content="vi">';
+		$xhtml .= '<meta name="google" content="notranslate">';
+		$xhtml .= '<meta name="copyright" content="Good Market Shop"/>';
+		$xhtml .= '<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">';
 		$xhtml .= '<meta property="og:site_name" content="' . Config::get('app.name') . '" />';
 		$xhtml .= '<meta property="og:type" content="website"/>';
 		$xhtml .= '<meta property="og:title" content="' . $this->_title . '" />';
@@ -140,7 +145,7 @@ class View
 	// Đường dẫn hình ảnh bên trong code
 	public function imageInside($pathFile)
 	{
-		return $this->_viewUrl . @$this->_params['excute']['appName'] . DS . 'images' . DS . $pathFile;
+		return $this->_viewUrl . 'images' . DS . $pathFile;
 	}
 
 	// Phương thức trả về đường dẫn của một hình ảnh với /views/{$pathFile}
@@ -196,20 +201,20 @@ class View
 	// Phương thức thiết lập icon shortcut như một ứng dụng mobile
 	public function shortcut($imgIcon)
 	{
-		$this->_headTags .= '<link href="' . $this->imageInside($imgIcon) . '" type="image/png" rel="shortcut icon"/>';
+		$this->_headTags .= '<link href="' . $this->imageOutside($imgIcon) . '" type="image/png" rel="shortcut icon"/>';
 	}
 
 	// Phương thức thiết lập trình duyệt như một ứng dụng mobile app
-	public function getManifest($name, $icon)
+	public function getManifest()
 	{
 		echo json_encode([
 			"version" => "1.0",
 			"lang" => "en",
-			"name" => $name,
+			"name" => $this->_data['manifestName'],
 			"scope" => "/",
 			"display" => "fullscreen",
 			"start_url" =>  $this->_host,
-			"short_name" => $name,
+			"short_name" => $this->_data['manifestName'],
 			"description" => "",
 			"orientation" => "portrait",
 			"background_color" => "#000000",
@@ -217,7 +222,7 @@ class View
 			"generated" => "true",
 			"icons" => [
 				[
-					"src" => $this->_imgUrl . $icon,
+					"src" => $this->_data['manifestIcon'],
 					"sizes" => "36x36",
 					"type" => "image/png"
 				]
@@ -226,9 +231,13 @@ class View
 	}
 
 	// Phương thức thiết lập icon shortcut như một ứng dụng mobile
-	public function tagsManifest()
+	public function tagsManifest($name, $icon)
 	{
+		$this->_data['manifestName'] = $name;
+		$this->_data['manifestIcon'] = $this->_imgUrl . $icon;
 		$this->_headTags .= '<link rel="manifest" href="' . $this->_viewUrl . 'manifest.json">';
+		$this->_headTags .= '<link rel="apple-touch-icon-precomposed" href="' . $this->_data['manifestIcon'] . '" />';
+		$this->_headTags .= '<meta name="theme-color" content="#F76B6A">';
 	}
 
 	// Phương thức tạo thuộc tính schema
@@ -357,34 +366,33 @@ class View
 		$this->_data[$key] = $data;
 	}
 
-	// Phương thức lấy data
-	public function getData($name)
+	// Phương thức lấy data $key or sub $key key1.key2
+	public function getData($key)
 	{
-		if (gettype($this->_data) == 'array') {
-			if (isset($this->_data[$name])) {
-				return $this->_data[$name];
-			}
-		}
-		if (gettype($this->_data) == 'object') {
-			if (isset($this->_data->$name)) {
-				return $this->_data->$name;
-			}
-		}
-	}
-
-	// Phương thức lấy data cấp 2
-	public function getItem($name, $item)
-	{
-		$data = $this->getData($name);
-		if ($data) {
-			if (gettype($data) == 'array') {
-				if (isset($data[$item])) {
-					return $data[$item];
+		if ($this->_data && $key) {
+			if ($items = explode('.', $key)) {
+				$data = $this->_data;
+				if (gettype($this->_data) == 'array') {
+					foreach ($items as $key) {
+						if (isset($data[$key])) {
+							$data = $data[$key];
+						} else {
+							$data = null;
+							break;
+						}
+					}
+					return $data;
 				}
-			}
-			if (gettype($data) == 'object') {
-				if (isset($data->$item)) {
-					return $data->$item;
+				if (gettype($this->_data) == 'object') {
+					foreach ($items as $key) {
+						if (isset($data->$key)) {
+							$data = $data->$key;
+						} else {
+							$data = null;
+							break;
+						}
+					}
+					return $data;
 				}
 			}
 		}
