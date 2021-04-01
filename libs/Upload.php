@@ -129,6 +129,7 @@ class Upload
 	// Phương thức init
 	public function init($fileName)
 	{
+		$this->_data = null;
 		if (isset($_FILES[$fileName])) {
 			$this->_type = 'file';
 			$this->checkFileInput($_FILES[$fileName]);
@@ -437,18 +438,18 @@ class Upload
 					'data'	=> []
 				];
 				foreach ($files as $file) {
+					if ($this->isError()) {
+						break;
+					}
 					$destination = $this->_dir . DS . $file;
 					$localFile = $this->_dirTmp . DS . $file;
-					if (@ftp_put($this->_ftp, $destination, $localFile, FTP_BINARY)) {
-						$result = $this->responsive($destination);
-						$response['status'] 	= $result['status'];
-						$response['message'] 	= $result['message'];
-						$response['data'][]	 	= $result;
-						continue;
+					if (!@ftp_put($this->_ftp, $destination, $localFile, FTP_BINARY)) {
+						$this->_errors = 'Lỗi tải tập tin!';
 					}
-					$response['status'] = false;
-					$response['message'] = "Lỗi tải tập tin!";
-					break;
+					$result = $this->responsive($destination);
+					$response['status'] 	= $result['status'];
+					$response['message'] 	= $result['message'];
+					$response['data'][]	 	= $result;
 				}
 				$this->deleteFileTmp($files);
 				return $response;
