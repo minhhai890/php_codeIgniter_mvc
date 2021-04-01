@@ -7,8 +7,8 @@ return [
 
     // URL
     'url' => [
-        'host' => 'http://localhost/linahouse/CodeIgniter/',
-        'image' => 'http://localhost/linahouse/CodeIgniter/',
+        'host' => 'http://localhost/CodeIgniter/',
+        'image' => 'http://localhost/CodeIgniter/',
         'publish' => '',
         'logo' => ''
     ],
