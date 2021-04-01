@@ -107,22 +107,24 @@ class Upload
 	// Phương thức thiết lập tham số trước khi tải tập tin
 	protected function setParams($options)
 	{
-		if ($options['error'] > 0) {
-			$this->_errors = 'Lỗi tải tập tin!';
-		} else {
-			$this->_name = @$options['name'];
-			$this->_tmp = @$options['tmp'];
-			$this->_size = @$options['size'];
-			$this->_exten = @$options['exten'];
-			if (!$this->_exten && $this->_name) {
-				$pathinfo = pathinfo($this->_name);
-				if (isset($pathinfo['extension'])) {
-					$this->_exten = $pathinfo['extension'];
-				} else {
-					$this->_errors = 'Lỗi phần mở rộng của tập tin!';
+		if (!$this->isError()) {
+			if ($options['error'] > 0) {
+				$this->_errors = 'Lỗi tải tập tin!';
+			} else {
+				$this->_name = @$options['name'];
+				$this->_tmp = @$options['tmp'];
+				$this->_size = @$options['size'];
+				$this->_exten = @$options['exten'];
+				if (!$this->_exten && $this->_name) {
+					$pathinfo = pathinfo($this->_name);
+					if (isset($pathinfo['extension'])) {
+						$this->_exten = $pathinfo['extension'];
+					} else {
+						$this->_errors = 'Lỗi phần mở rộng của tập tin!';
+					}
 				}
+				$this->_rename = '-' . time() . '.' . $this->_exten;
 			}
-			$this->_rename = '-' . time() . '.' . $this->_exten;
 		}
 	}
 
@@ -130,30 +132,26 @@ class Upload
 	public function init($fileName)
 	{
 		$this->_data = null;
-		if (isset($_FILES[$fileName])) {
-			$this->_type = 'file';
-			$this->checkFileInput($_FILES[$fileName]);
-		} else {
-			$this->_type = 'content';
-			if (is_array($fileName)) { // multi file
-				foreach ($fileName as $value) {
-					if (!$this->isError()) {
-						if ($item = $this->checkFileContent($value)) {
-							$this->_data[] = $item;
-							continue;
-						}
-					}
-					break;
+		$this->_type = 'content';
+		if (is_array($fileName)) { // content multi file
+			foreach ($fileName as $value) {
+				if ($item = $this->checkFileContent($value)) {
+					$this->_data[] = $item;
 				}
-			} else { // single file				
+			}
+		} else {
+			if (isset($_FILES[$fileName])) {
+				$this->_type = 'file';
+				$this->checkFileInput($_FILES[$fileName]);
+			} else {
+				// content single file
 				if ($item = $this->checkFileContent($fileName)) {
 					$this->_data[] = $item;
 				}
 			}
 		}
 		// chọn tập tin
-		if ($item = current($this->_data)) {
-			array_shift($this->_data);
+		if ($item = array_shift($this->_data)) {
 			$this->setParams($item);
 		}
 	}
