@@ -390,6 +390,7 @@ class Func
 			'gif' => 'image/gif',
 			'jpg' => 'image/jpeg',
 			'jpeg' => 'image/jpeg',
+			'webp' => 'image/webp',
 			'ico' => 'image/vnd.microsoft.icon',
 			'woff2' => 'application/font-woff2',
 			'woff' => 'application/font-woff',
