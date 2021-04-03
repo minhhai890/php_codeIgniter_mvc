@@ -19,6 +19,9 @@ class Upload
 	// type = file(input file) hoặc type=content(base64)
 	protected $_type;
 
+	// Chuyển đổi tập tin hình ảnh sang định dạng webp
+	protected $_webp;
+
 	// Biến lưu dữ liệu
 	protected $_data;
 
@@ -36,6 +39,9 @@ class Upload
 
 	// Biến lưu phần thay đổi kích thước ảnh
 	protected $_resize;
+
+	// Biến lưu tỉ lệ
+	protected $_scale;
 
 	// Biến lưu phần tên tập tin đã thay đổi
 	protected $_rename;
@@ -101,7 +107,7 @@ class Upload
 	// Phương thức đổi tên tập tin upload
 	protected function rename()
 	{
-		return $this->_name . $this->_rename;
+		return $this->_name . $this->_rename . '.' . $this->_exten;
 	}
 
 	// Phương thức thiết lập tham số trước khi tải tập tin
@@ -123,36 +129,42 @@ class Upload
 						$this->_errors = 'Lỗi phần mở rộng của tập tin!';
 					}
 				}
-				$this->_rename = '-' . time() . '.' . $this->_exten;
+				$this->_rename = '-' . time();
 			}
 		}
 	}
 
 	// Phương thức init
-	public function init($fileName)
+	// $option: $_FILES[$option] -> input type="file"
+	// $option: content base64
+	public function init($option, $file = true)
 	{
 		$this->_data = null;
-		$this->_type = 'content';
-		if (is_array($fileName)) { // content multi file
-			foreach ($fileName as $value) {
-				if ($item = $this->checkFileContent($value)) {
-					$this->_data[] = $item;
-				}
+		if ($file == true) {	// Upload tập tin từ form input type file
+			$this->_type = 'file';
+			if (isset($_FILES[$option])) {
+				$this->checkFileInput($_FILES[$option]);
 			}
-		} else {
-			if (isset($_FILES[$fileName])) {
-				$this->_type = 'file';
-				$this->checkFileInput($_FILES[$fileName]);
+		} else {				// Upload tập tin từ content base64
+			$this->_type = 'base64';
+			if (is_array($option)) { // content multi file
+				foreach ($option as $value) {
+					if ($item = $this->checkFileContent($value)) {
+						$this->_data[] = $item;
+					}
+				}
 			} else {
 				// content single file
-				if ($item = $this->checkFileContent($fileName)) {
+				if ($item = $this->checkFileContent($option)) {
 					$this->_data[] = $item;
 				}
 			}
 		}
 		// chọn tập tin
-		if ($item = array_shift($this->_data)) {
-			$this->setParams($item);
+		if ($this->_data) {
+			if ($item = array_shift($this->_data)) {
+				$this->setParams($item);
+			}
 		}
 	}
 
@@ -176,6 +188,18 @@ class Upload
 			'height' => $height,
 			'filename' => '-' . $width . 'x' . $height . $this->_rename
 		];
+	}
+
+	// Phương thức thiết lập tỉ lệ $quanlity max = 100
+	public function scale($quality = 90)
+	{
+		$this->_scale = $quality;
+	}
+
+	// Phương thức thiết lập chuyển đổi định dạng tập tin sang webp
+	public function convertWebp()
+	{
+		$this->_webp = true;
 	}
 
 	// Phương thức thiết lập phần mở rộng
@@ -290,16 +314,14 @@ class Upload
 	}
 
 	// Phương thức lưu file tạm
-	public function saveFileTmp()
+	public function saveTmp()
 	{
 		$this->isDirTmp();
 		$this->isSize();
 		$this->isExtension();
 		if (!$this->isError() && $this->_tmp) {
-			$data = [];
-			$filename = $this->rename();
-			$fileTmp = $this->_dirTmp . DS . $filename;
-			if ($this->_type == 'content') {
+			$fileTmp = $this->_dirTmp . DS . $this->rename();
+			if ($this->_type == 'base64') {
 				if (!@file_put_contents($fileTmp, base64_decode($this->_tmp)) !== false) {
 					$this->_errors = 'Lỗi lưu tập tin tạm!';
 				}
@@ -309,25 +331,77 @@ class Upload
 				}
 			}
 			if (!$this->_errors) {
-				if ($this->_resize) {
-					foreach ($this->_resize as $value) {
-						$imageResize = new Image($fileTmp);
-						$resizeName = $this->_name . $value['filename'];
-						$imageResize->crop($value['width'], $value['height']);
-						$imageResize->save($this->_dirTmp . DS . $resizeName);
-						$data[] = $resizeName;
-					}
-				} else {
-					$data[] = $filename;
+				// Convert to webp				
+				$this->saveWebP(100);
+
+				// Scale
+				$this->saveScale();
+
+				// Resize file
+				if ($data = $this->saveResize()) {
+					return $data;
 				}
-				return $data;
+				return [$this->rename()];
 			}
 		}
 		return false;
 	}
 
+	// Phương thức lưu tỉ lể
+	public function saveScale()
+	{
+		if ($this->_scale) {
+			$source = $this->_dirTmp . DS . $this->rename();
+			$imageResize = new Image($source);
+			$imageResize->scale($this->_scale);
+			$imageResize->save($source);
+		}
+	}
+
+	// Phương thức thay đổi kích thước tập tin
+	public function saveResize()
+	{
+		$data = [];
+		if ($this->_resize) {
+			$source = $this->_dirTmp . DS . $this->rename();
+			foreach ($this->_resize as $value) {
+				$imageResize = new Image($source);
+				$resizeName = $this->_name . $value['filename'] . '.' . $this->_exten;
+				$imageResize->crop($value['width'], $value['height']);
+				$imageResize->save($this->_dirTmp . DS . $resizeName);
+				$data[] = $resizeName;
+			}
+		}
+		return $data;
+	}
+
+	// Phương thức chuyển đổi định dạng tập tin thành webp
+	public function saveWebP($quality = 100)
+	{
+		if ($this->_webp) {
+			$image = null;
+			$source = $this->_dirTmp . DS . $this->rename();
+			switch ($this->_exten) {
+				case 'png':
+					$image = imagecreatefrompng($source);
+					break;
+				case 'gif':
+					$image = imagecreatefromgif($source);
+					break;
+				case 'jpg':
+				case 'jpeg':
+					$image = imagecreatefromjpeg($source);
+			}
+			if ($image) {
+				$this->_exten = 'webp';
+				$destination = $this->_dirTmp . DS . $this->rename();
+				return imagewebp($image, $destination, $quality);
+			}
+		}
+	}
+
 	// Phương thức delete file Tạm
-	public function deleteFileTmp($data)
+	public function deleteTmp($data)
 	{
 		if ($data) {
 			$data[] = $this->rename();
@@ -429,7 +503,7 @@ class Upload
 	public function ftpUpload()
 	{
 		if ($this->_ftp && !$this->isError()) {
-			if ($files = $this->saveFileTmp()) {
+			if ($files = $this->saveTmp()) {
 				$response = [
 					'status' => false,
 					'message' => $this->_errors,
@@ -449,7 +523,7 @@ class Upload
 					$response['message'] 	= $result['message'];
 					$response['data'][]	 	= $result;
 				}
-				$this->deleteFileTmp($files);
+				$this->deleteTmp($files);
 				return $response;
 			}
 		}
