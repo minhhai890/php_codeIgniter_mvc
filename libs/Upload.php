@@ -393,6 +393,20 @@ class Upload
 		if (!$this->isError()) {
 			$destination = $this->_dir . DS . $filename;
 			if (@move_uploaded_file($this->_tmp, $destination)) {
+				// Convert webp
+				if ($this->_webp) {
+					$source = $destination;
+					$this->_exten = 'webp';
+					$filename = $this->rename();
+					$destination = $this->_dir . DS . $filename;
+					$imageResize = new Image($source);
+					$imageResize->scale(95);
+					if ($imageResize->save($destination, IMAGETYPE_WEBP)) {
+						@unlink($source);
+						return true;
+					}
+				}
+				// Resize image
 				if ($this->_resize) {
 					$response = [
 						'status' => false,
