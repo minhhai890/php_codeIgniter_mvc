@@ -40,9 +40,6 @@ class Upload
 	// Biến lưu phần thay đổi kích thước ảnh
 	protected $_resize;
 
-	// Biến lưu tỉ lệ
-	protected $_scale;
-
 	// Biến lưu phần tên tập tin đã thay đổi
 	protected $_rename;
 
@@ -190,12 +187,6 @@ class Upload
 		];
 	}
 
-	// Phương thức thiết lập tỉ lệ $quanlity max = 100
-	public function scale($quality = 90)
-	{
-		$this->_scale = $quality;
-	}
-
 	// Phương thức thiết lập chuyển đổi định dạng tập tin sang webp
 	public function convertWebp()
 	{
@@ -332,10 +323,7 @@ class Upload
 			}
 			if (!$this->_errors) {
 				// Convert to webp				
-				$this->saveWebP(100);
-
-				// Scale
-				$this->saveScale();
+				$this->saveWebP();
 
 				// Resize file
 				if ($data = $this->saveResize()) {
@@ -347,15 +335,21 @@ class Upload
 		return false;
 	}
 
-	// Phương thức lưu tỉ lể
-	public function saveScale()
+	// Phương thức chuyển đổi định dạng tập tin thành webp
+	public function saveWebP()
 	{
-		if ($this->_scale) {
+		if ($this->_webp) {
 			$source = $this->_dirTmp . DS . $this->rename();
+			$this->_exten = 'webp';
+			$destination = $this->_dirTmp . DS . $this->rename();
 			$imageResize = new Image($source);
-			$imageResize->scale($this->_scale);
-			$imageResize->save($source);
+			$imageResize->scale(95);
+			if ($imageResize->save($destination, IMAGETYPE_WEBP)) {
+				@unlink($source);
+				return true;
+			}
 		}
+		return false;
 	}
 
 	// Phương thức thay đổi kích thước tập tin
@@ -373,31 +367,6 @@ class Upload
 			}
 		}
 		return $data;
-	}
-
-	// Phương thức chuyển đổi định dạng tập tin thành webp
-	public function saveWebP($quality = 100)
-	{
-		if ($this->_webp) {
-			$image = null;
-			$source = $this->_dirTmp . DS . $this->rename();
-			switch ($this->_exten) {
-				case 'png':
-					$image = imagecreatefrompng($source);
-					break;
-				case 'gif':
-					$image = imagecreatefromgif($source);
-					break;
-				case 'jpg':
-				case 'jpeg':
-					$image = imagecreatefromjpeg($source);
-			}
-			if ($image) {
-				$this->_exten = 'webp';
-				$destination = $this->_dirTmp . DS . $this->rename();
-				return imagewebp($image, $destination, $quality);
-			}
-		}
 	}
 
 	// Phương thức delete file Tạm
